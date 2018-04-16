@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/Heart-rate-monitor-BLE.iml" filepath="$PROJECT_DIR$/Heart-rate-monitor-BLE.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/heart-rate-monitor-ble.iml" filepath="$PROJECT_DIR$/heart-rate-monitor-ble.iml" />
-      <module fileurl="file://$PROJECT_DIR$/things/things.iml" filepath="$PROJECT_DIR$/things/things.iml" />
     </modules>
   </component>
 </project>

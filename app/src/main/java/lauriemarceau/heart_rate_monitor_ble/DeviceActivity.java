@@ -15,6 +15,9 @@ public class DeviceActivity extends AppCompatActivity {
     public static UUID DEVICE_INFORMATION_SERVICE_UUID = convertFromInteger( 0x180A);
     public static UUID DEVICE_NAME_UUID = convertFromInteger(0x2A29);
 
+    UUID deviceNameUUID = UUID.fromString("00002a00-0000-1000-8000-00805f9b34fb");
+    UUID batteryLevelUUID = UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

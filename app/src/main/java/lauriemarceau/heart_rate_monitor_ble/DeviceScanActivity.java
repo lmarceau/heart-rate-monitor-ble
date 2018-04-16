@@ -17,10 +17,16 @@ import android.os.Handler;
 import android.content.pm.PackageManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,24 +42,51 @@ public class DeviceScanActivity extends AppCompatActivity {
     private static final String TAG = DeviceScanActivity.class.getSimpleName();
 
     private final static int REQUEST_ENABLE_BT = 1;
-    private final static int REQUEST_COARSE_LOCATION = 2;
+    private final static int REQUEST_COARSE_LOCATION = 1;
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanCallback mScanCallback;
     private BluetoothGatt mGatt;
-    private MenuItem menuScanItem;
+    private HashMap<String, BluetoothDevice> mScanResults;
 
+    int deviceIndex = 0;
+    ArrayList<BluetoothDevice> devicesDiscovered = new ArrayList<>();
+    Button connectToDevice;
+    Button disconnectDevice;
+    EditText deviceIndexInput;
+    TextView deviceTextView;
+
+    private MenuItem menuScanItem;
     private Boolean mConnected;
     private Boolean mScanning = false;
-    private HashMap<String, BluetoothDevice> mScanResults;
     private Handler mHandler;
-    private int SCAN_PERIOD = 10000;
+    private int SCAN_PERIOD = 5000; // 5 seconds scan period
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scan_device);
+
+        deviceTextView = findViewById(R.id.DeviceTextView);
+        deviceTextView.setMovementMethod(new ScrollingMovementMethod());
+        deviceIndexInput = findViewById(R.id.InputIndex);
+        deviceIndexInput.setText("0");
+
+        connectToDevice = findViewById(R.id.ConnectButton);
+        connectToDevice.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                connectToDeviceSelected();
+            }
+         });
+
+        disconnectDevice = findViewById(R.id.DisconnectButton);
+        disconnectDevice.setVisibility(View.INVISIBLE);
+        disconnectDevice.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v){
+                disconnectDeviceSelected();
+            }
+        });
 
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
@@ -93,13 +126,16 @@ public class DeviceScanActivity extends AppCompatActivity {
     }
 
     /**
-     * Bluetooth scan that will save all ScanResults into a map
+     * Bluetooth scan that will save all ScanResults into a HashMap
      */
     private void startScan() {
         if (!hasPermissions() || mScanning) {
             return;
         }
         disconnectGattServer();
+
+        devicesDiscovered.clear();
+        deviceIndex = 0;
 
         mScanResults = new HashMap<>();
         mScanCallback = new BleScanCallback(mScanResults);
@@ -113,6 +149,7 @@ public class DeviceScanActivity extends AppCompatActivity {
                 .build();
         filters.add(scanFilter);*/
 
+        // Only scan for BLE devices
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
                 .build();
@@ -152,13 +189,15 @@ public class DeviceScanActivity extends AppCompatActivity {
         }
     }
 
-    private void connectDevice(BluetoothDevice device) {
-        GattClientCallback gattClientCallback = new GattClientCallback();
-        mGatt = device.connectGatt(this, true, gattClientCallback);
+    public void connectToDeviceSelected() {
+        deviceTextView.append("Trying to connect to device at index: " + deviceIndexInput.getText() + "\n");
+        int deviceSelected = Integer.parseInt(deviceIndexInput.getText().toString());
+        mGatt = devicesDiscovered.get(deviceSelected).connectGatt(this, true, gattClientCallback);
     }
 
-    public void setConnected(boolean connected) {
-        mConnected = connected;
+    public void disconnectDeviceSelected() {
+        deviceTextView.append("Disconnecting from device\n");
+        mGatt.disconnect();
     }
 
     public void disconnectGattServer() {
@@ -191,7 +230,7 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     /**
      * Verify permissions and if bluetooth is enabled, if not asked for them
-     * @return false when Bluetooth or permission
+     * @return false when Bluetooth or permission are not enabled
      */
     private boolean hasPermissions() {
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
@@ -220,6 +259,7 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     /**
      *  Bluetooth scan callback
+     *  Extends the ScanCallback class to add results in the Hashmap
      */
     private class BleScanCallback extends ScanCallback {
 
@@ -231,7 +271,17 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            addScanResult(result);
+            // TO DO: filter and remove null names
+            deviceTextView.append("Index: " + deviceIndex + ", Device Name: "
+                    + result.getDevice().getName() + " rssi: " + result.getRssi() + "\n");
+            devicesDiscovered.add(result.getDevice());
+            deviceIndex++;
+            // auto scroll for text view
+            final int scrollAmount = deviceTextView.getLayout().getLineTop(deviceTextView.getLineCount()) - deviceTextView.getHeight();
+            // if there is no need to scroll, scrollAmount will be <=0
+            if (scrollAmount > 0) {
+                deviceTextView.scrollTo(0, scrollAmount);
+            }
         }
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
@@ -253,7 +303,8 @@ public class DeviceScanActivity extends AppCompatActivity {
     /**
      * Gatt client callback
      */
-    private class GattClientCallback extends BluetoothGattCallback {
+    private final BluetoothGattCallback gattClientCallback = new BluetoothGattCallback() {
+
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
@@ -272,7 +323,7 @@ public class DeviceScanActivity extends AppCompatActivity {
             }
         }
 
-    }
+    };
 
 }
 
