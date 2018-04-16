@@ -1,45 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".DeviceScanActivity">
 
     <TextView
+        android:id="@+id/textView"
+        android:layout_width="361dp"
+        android:layout_height="wrap_content"
+        android:text="Welcome to the Heart Rate Monitor app.\nPlease scan a device."
+        android:textSize="9pt"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/ConnectButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
         android:id="@+id/DeviceTextView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="80dp"
-        android:layout_marginTop="80dp"
-        android:maxLines="30"
-        android:textSize="8pt"
+        android:layout_marginTop="100dp"
         android:elegantTextHeight="true"
-        android:scrollbars="vertical" />
+        android:maxLines="30"
+        android:scrollbars="vertical"
+        android:textSize="8pt" />
 
     <Button
         android:id="@+id/ConnectButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:text="Connect to device with index: " />
+        android:layout_marginBottom="1dp"
+        android:text="@string/connect_button"
+        app:layout_constraintBottom_toTopOf="@+id/DeviceTextView"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/DataButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:text="Show device data" />
+        android:layout_marginBottom="1dp"
+        android:text="@string/data_button"
+        app:layout_constraintBottom_toTopOf="@+id/DeviceTextView"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <EditText
         android:id="@+id/InputIndex"
         android:layout_width="100dp"
         android:layout_height="50dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
         android:cursorVisible="false"
         android:inputType="number"
         android:paddingEnd="5dp"
         android:paddingStart="10dp"
-        android:singleLine="true" />
+        android:singleLine="true"
+        app:layout_constraintBottom_toTopOf="@+id/DeviceTextView"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-</RelativeLayout>
+</android.support.constraint.ConstraintLayout>

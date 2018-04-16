@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Heart_Rate_Monitor_BLE</string>
+    <string name="app_name">Heart rate monitor BLE</string>
     <string name="scan_button">Scan</string>
     <string name="label_name_device">Name of the device:</string>
     <string name="label_battery_level">Battery level:</string>
@@ -7,4 +7,6 @@
     <string name="no_data">No data</string>
     <string name="no_name">No device name</string>
     <string name="no_battery_level">No battery level</string>
+    <string name="connect_button">Connect to device with index:</string>
+    <string name="data_button">Show the device data</string>
 </resources>

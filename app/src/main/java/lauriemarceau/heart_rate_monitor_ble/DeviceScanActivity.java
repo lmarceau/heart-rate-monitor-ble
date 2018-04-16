@@ -78,6 +78,7 @@ public class DeviceScanActivity extends AppCompatActivity {
         // TO DO : Use lambda function everywhere where it's needed in the code
         connectToDevice.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                if (devicesDiscovered.isEmpty()) return;
                 connectToDeviceSelected();
             }
          });
@@ -364,6 +365,7 @@ public class DeviceScanActivity extends AppCompatActivity {
                         mConnected = true;
                         deviceTextView.append("Connection success\n");
                         connectToDevice.setVisibility(View.INVISIBLE);
+                        deviceIndexInput.setVisibility(View.INVISIBLE);
                         showDeviceData.setVisibility(View.VISIBLE);
                     }
                 });
@@ -374,6 +376,7 @@ public class DeviceScanActivity extends AppCompatActivity {
                     public void run() {
                         deviceTextView.append("Connection failure\n");
                         connectToDevice.setVisibility(View.INVISIBLE);
+                        deviceIndexInput.setVisibility(View.INVISIBLE);
                         showDeviceData.setVisibility(View.INVISIBLE);
                         disconnectGattServer();
                     }
