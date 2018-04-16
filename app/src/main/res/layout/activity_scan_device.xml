@@ -10,8 +10,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="80dp"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="80dp"
         android:maxLines="30"
+        android:textSize="8pt"
+        android:elegantTextHeight="true"
         android:scrollbars="vertical" />
 
     <Button
@@ -22,11 +24,11 @@
         android:text="Connect to device with index: " />
 
     <Button
-        android:id="@+id/DisconnectButton"
+        android:id="@+id/DataButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="Disconnect from device" />
+        android:text="Show device data" />
 
     <EditText
         android:id="@+id/InputIndex"
