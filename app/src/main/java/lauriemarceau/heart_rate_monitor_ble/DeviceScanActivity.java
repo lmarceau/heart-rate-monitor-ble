@@ -42,28 +42,28 @@ import java.util.Map;
  */
 public class DeviceScanActivity extends AppCompatActivity {
 
-    private static final String TAG = DeviceScanActivity.class.getSimpleName();
-
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_COARSE_LOCATION = 1;
+
+    private static final String TAG = DeviceScanActivity.class.getSimpleName();
+    private final int SCAN_PERIOD = 5000; // 5 seconds scan period
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanCallback mScanCallback;
     private BluetoothGatt mGatt;
+    public BluetoothDevice chosenDevice;
     private MenuItem menuScanItem;
     private Boolean mConnected;
     private Boolean mScanning = false;
     private Handler mHandler;
-    private int SCAN_PERIOD = 5000; // 5 seconds scan period
 
-    ArrayList<BluetoothDevice> devicesDiscovered = new ArrayList<>();
-    Button connectToDevice;
-    Button showDeviceData;
-    EditText deviceIndexInput;
-    TextView deviceTextView;
-    TextView headerTextView;
-    int deviceIndex = 0;
+    public ArrayList<BluetoothDevice> devicesDiscovered = new ArrayList<>();
+    public Button connectToDevice;
+    public EditText deviceIndexInput;
+    public TextView deviceTextView;
+    public TextView headerTextView;
+    public int deviceIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,12 +73,9 @@ public class DeviceScanActivity extends AppCompatActivity {
         deviceTextView = findViewById(R.id.DeviceTextView);
         deviceTextView.setMovementMethod(new ScrollingMovementMethod());
         deviceIndexInput = findViewById(R.id.InputIndex);
-        //deviceIndexInput.setText("0");
-        //deviceIndexInput.setVisibility(View.INVISIBLE);
         headerTextView = findViewById(R.id.HeaderTextView);
 
         connectToDevice = findViewById(R.id.ConnectButton);
-        //connectToDevice.setVisibility(View.INVISIBLE);
         // TO DO : Use lambda function everywhere where it's needed in the code
         connectToDevice.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -86,14 +83,6 @@ public class DeviceScanActivity extends AppCompatActivity {
                 connectToDeviceSelected();
             }
          });
-
-        showDeviceData = findViewById(R.id.DataButton);
-        //showDeviceData.setVisibility(View.INVISIBLE);
-        showDeviceData.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v){
-                showDeviceSelected();
-            }
-        });
 
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
@@ -136,9 +125,8 @@ public class DeviceScanActivity extends AppCompatActivity {
      * Bluetooth scan that will save all ScanResults into a HashMap
      */
     private void startScan() {
-        if (!hasPermissions() || mScanning) {
-            return;
-        }
+        if (!hasPermissions() || mScanning) return;
+
         disconnectGattServer();
 
         devicesDiscovered.clear();
@@ -195,14 +183,9 @@ public class DeviceScanActivity extends AppCompatActivity {
     }
 
     public void connectToDeviceSelected() {
-        deviceTextView.append("Trying to connect to device at index: " + deviceIndexInput.getText() + "\n");
+        deviceTextView.append("Connecting to device: " + deviceIndexInput.getText() + "\n");
         int deviceSelected = Integer.parseInt(deviceIndexInput.getText().toString());
         mGatt = devicesDiscovered.get(deviceSelected).connectGatt(this, true, gattClientCallback);
-    }
-
-    public void showDeviceSelected() {
-        deviceTextView.append("Show data from device\n");
-        // TO DO : intent
     }
 
     public void disconnectGattServer() {
@@ -263,8 +246,8 @@ public class DeviceScanActivity extends AppCompatActivity {
     }
 
     /**
-     *
-     * @param gattServices
+     * Display the Gatt services and characteristics for the found device
+     * @param gattServices list of the found bluetooth LE gatt services for the selected device
      */
     private void displayGattServices(List<BluetoothGattService> gattServices) {
         if (gattServices == null) return;
@@ -275,7 +258,7 @@ public class DeviceScanActivity extends AppCompatActivity {
             System.out.println("Service discovered: " + uuid);
             DeviceScanActivity.this.runOnUiThread(new Runnable() {
                 public void run() {
-                    deviceTextView.append("Service discovered: " + uuid + "\n");
+                    Log.d(TAG, "Service discovered: " + uuid + "\n");
                 }
             });
             new ArrayList<HashMap<String, String>>();
@@ -290,7 +273,7 @@ public class DeviceScanActivity extends AppCompatActivity {
                 System.out.println("Characteristic discovered for service: " + charUuid);
                 DeviceScanActivity.this.runOnUiThread(new Runnable() {
                     public void run() {
-                        deviceTextView.append("Characteristic discovered for service: "
+                        Log.d(TAG,"Characteristic discovered for service: "
                                 + charUuid + "\n");
                     }
                 });
@@ -335,9 +318,9 @@ public class DeviceScanActivity extends AppCompatActivity {
             deviceIndex++;
 
             // auto scroll for text view
-            final int scrollAmount = deviceTextView.getLayout().getLineTop(deviceTextView.getLineCount())
-                    - deviceTextView.getHeight();
-            // if there is no need to scroll, scrollAmount will be <=0
+            final int scrollAmount = deviceTextView.getLayout().getLineTop
+                    (deviceTextView.getLineCount()) - deviceTextView.getHeight();
+            // if there is no need to scroll, scrollAmount will be <= 0
             if (scrollAmount > 0) {
                 deviceTextView.scrollTo(0, scrollAmount);
             }
@@ -345,7 +328,8 @@ public class DeviceScanActivity extends AppCompatActivity {
     }
 
     /**
-     * Gatt client callback, append the text view, show contextual buttons and discover services
+     * Gatt client callback: append the text view, show/hide contextual buttons
+     *                       and discover services
      */
     private final BluetoothGattCallback gattClientCallback = new BluetoothGattCallback() {
 
@@ -354,11 +338,11 @@ public class DeviceScanActivity extends AppCompatActivity {
             super.onConnectionStateChange(gatt, status, newState);
 
             if (status == BluetoothGatt.GATT_FAILURE) {
-                deviceTextView.append("Connection failure\n");
+                Log.d(TAG,"Connection failure\n");
                 disconnectGattServer();
                 return;
             } else if (status != BluetoothGatt.GATT_SUCCESS) {
-                deviceTextView.append("Connection failure\n");
+                Log.d(TAG, "Connection failure\n");
                 disconnectGattServer();
                 return;
             }
@@ -367,22 +351,21 @@ public class DeviceScanActivity extends AppCompatActivity {
                     public void run() {
                         mConnected = true;
                         deviceTextView.setText(null);
-                        deviceTextView.append("Connection success\n");
+                        Log.d(TAG,"Connection success\n");
                         connectToDevice.setVisibility(View.GONE);
                         deviceIndexInput.setVisibility(View.GONE);
-                        showDeviceData.setVisibility(View.VISIBLE);
+                        headerTextView.setVisibility(View.GONE);
                         menuScanItem.setVisible(false);
+                        setContentView(R.layout.activity_device);
                     }
                 });
+                chosenDevice = gatt.getDevice();
                 gatt.discoverServices();
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 DeviceScanActivity.this.runOnUiThread(new Runnable() {
                     public void run() {
-                        deviceTextView.append("Connection failure\n");
-                        connectToDevice.setVisibility(View.GONE);
-                        deviceIndexInput.setVisibility(View.GONE);
-                        showDeviceData.setVisibility(View.INVISIBLE);
+                        Log.d(TAG,"Connection failure\n");
                         disconnectGattServer();
                     }
                 });
@@ -393,8 +376,7 @@ public class DeviceScanActivity extends AppCompatActivity {
         public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
             DeviceScanActivity.this.runOnUiThread(new Runnable() {
                 public void run() {
-                    headerTextView.setText(R.string.showing_gatt);
-                    deviceTextView.append("Device services have been discovered\n");
+                    Log.d(TAG,"@string/showing_gatt");
                 }
             });
             displayGattServices(gatt.getServices());

@@ -29,18 +29,6 @@
         app:layout_constraintBottom_toTopOf="@+id/DeviceTextView"
         app:layout_constraintEnd_toStartOf="@+id/InputIndex" />
 
-    <Button
-        android:id="@+id/DataButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
-        android:textSize="6pt"
-        android:visibility="invisible"
-        android:text="@string/data_button"
-        app:layout_constraintBottom_toTopOf="@+id/DeviceTextView"
-        app:layout_constraintRight_toRightOf="parent" />
-
     <EditText
         android:id="@+id/InputIndex"
         android:layout_width="100dp"
