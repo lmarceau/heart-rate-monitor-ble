@@ -7,44 +7,39 @@
     tools:context=".DeviceScanActivity">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/HeaderTextView"
         android:layout_width="361dp"
         android:layout_height="wrap_content"
-        android:text="Welcome to the Heart Rate Monitor app.\nPlease scan a device."
+        android:text="@string/intro_text"
         android:textSize="9pt"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/ConnectButton"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="10dp"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/DeviceTextView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="80dp"
-        android:layout_marginTop="100dp"
-        android:elegantTextHeight="true"
-        android:maxLines="30"
-        android:scrollbars="vertical"
-        android:textSize="8pt" />
 
     <Button
         android:id="@+id/ConnectButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="1dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginEnd="8dp"
         android:text="@string/connect_button"
+        android:textSize="6pt"
+        android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/DeviceTextView"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toStartOf="@+id/InputIndex" />
 
     <Button
         android:id="@+id/DataButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="1dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:textSize="6pt"
+        android:visibility="invisible"
         android:text="@string/data_button"
         app:layout_constraintBottom_toTopOf="@+id/DeviceTextView"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintRight_toRightOf="parent" />
 
     <EditText
         android:id="@+id/InputIndex"
@@ -55,7 +50,30 @@
         android:paddingEnd="5dp"
         android:paddingStart="10dp"
         android:singleLine="true"
+        android:visibility="invisible"
+        android:text="0"
         app:layout_constraintBottom_toTopOf="@+id/DeviceTextView"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="#000000"
+        app:layout_constraintBottom_toTopOf="@+id/DeviceTextView" />
+
+    <TextView
+        android:id="@+id/DeviceTextView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="40dp"
+        android:layout_marginTop="100dp"
+        android:scrollbars="vertical"
+        android:textSize="8pt" />
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="#000000"
+        app:layout_constraintTop_toBottomOf="@+id/DeviceTextView" />
 
 </android.support.constraint.ConstraintLayout>

@@ -62,6 +62,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     Button showDeviceData;
     EditText deviceIndexInput;
     TextView deviceTextView;
+    TextView headerTextView;
     int deviceIndex = 0;
 
     @Override
@@ -72,9 +73,12 @@ public class DeviceScanActivity extends AppCompatActivity {
         deviceTextView = findViewById(R.id.DeviceTextView);
         deviceTextView.setMovementMethod(new ScrollingMovementMethod());
         deviceIndexInput = findViewById(R.id.InputIndex);
-        deviceIndexInput.setText("0");
+        //deviceIndexInput.setText("0");
+        //deviceIndexInput.setVisibility(View.INVISIBLE);
+        headerTextView = findViewById(R.id.HeaderTextView);
 
         connectToDevice = findViewById(R.id.ConnectButton);
+        //connectToDevice.setVisibility(View.INVISIBLE);
         // TO DO : Use lambda function everywhere where it's needed in the code
         connectToDevice.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -84,7 +88,7 @@ public class DeviceScanActivity extends AppCompatActivity {
          });
 
         showDeviceData = findViewById(R.id.DataButton);
-        showDeviceData.setVisibility(View.INVISIBLE);
+        //showDeviceData.setVisibility(View.INVISIBLE);
         showDeviceData.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v){
                 showDeviceSelected();
@@ -138,6 +142,7 @@ public class DeviceScanActivity extends AppCompatActivity {
         disconnectGattServer();
 
         devicesDiscovered.clear();
+        deviceTextView.setText(null);
         deviceIndex = 0;
 
         mScanCallback = new BleScanCallback(devicesDiscovered);
@@ -145,11 +150,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
         List<ScanFilter> filters = new ArrayList<>();
-
-        /*ScanFilter scanFilter = new ScanFilter.Builder()
-                .setServiceUuid(new ParcelUuid(SERVICE_UUID))
-                .build();
-        filters.add(scanFilter);*/
 
         // Only scan for BLE devices
         ScanSettings settings = new ScanSettings.Builder()
@@ -160,7 +160,7 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         mHandler = new Handler();
         mHandler.postDelayed(this::stopScan, SCAN_PERIOD);
-
+        headerTextView.setText(R.string.scanning_text);
         mScanning = true;
         Log.d(TAG, "Started scanning.");
     }
@@ -189,6 +189,9 @@ public class DeviceScanActivity extends AppCompatActivity {
         for (BluetoothDevice device : devicesDiscovered ) {
             Log.d(TAG, "Found device: " + device.getAddress() );
         }
+        deviceIndexInput.setVisibility(View.VISIBLE);
+        connectToDevice.setVisibility(View.VISIBLE);
+        headerTextView.setText(R.string.select_device);
     }
 
     public void connectToDeviceSelected() {
@@ -326,7 +329,7 @@ public class DeviceScanActivity extends AppCompatActivity {
         }
         private void addScanResult(ScanResult result) {
             deviceTextView.append("Index: " + deviceIndex + ", Device Name: "
-                    + result.getDevice().getName() + " address: "
+                    + result.getDevice().getName() + ", Address: "
                     + result.getDevice().getAddress() + "\n");
             devicesDiscovered.add(result.getDevice());
             deviceIndex++;
@@ -363,10 +366,12 @@ public class DeviceScanActivity extends AppCompatActivity {
                 DeviceScanActivity.this.runOnUiThread(new Runnable() {
                     public void run() {
                         mConnected = true;
+                        deviceTextView.setText(null);
                         deviceTextView.append("Connection success\n");
-                        connectToDevice.setVisibility(View.INVISIBLE);
-                        deviceIndexInput.setVisibility(View.INVISIBLE);
+                        connectToDevice.setVisibility(View.GONE);
+                        deviceIndexInput.setVisibility(View.GONE);
                         showDeviceData.setVisibility(View.VISIBLE);
+                        menuScanItem.setVisible(false);
                     }
                 });
                 gatt.discoverServices();
@@ -375,8 +380,8 @@ public class DeviceScanActivity extends AppCompatActivity {
                 DeviceScanActivity.this.runOnUiThread(new Runnable() {
                     public void run() {
                         deviceTextView.append("Connection failure\n");
-                        connectToDevice.setVisibility(View.INVISIBLE);
-                        deviceIndexInput.setVisibility(View.INVISIBLE);
+                        connectToDevice.setVisibility(View.GONE);
+                        deviceIndexInput.setVisibility(View.GONE);
                         showDeviceData.setVisibility(View.INVISIBLE);
                         disconnectGattServer();
                     }
@@ -386,9 +391,9 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         @Override
         public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
-            // this will get called after the client initiates a BluetoothGatt.discoverServices() call
             DeviceScanActivity.this.runOnUiThread(new Runnable() {
                 public void run() {
+                    headerTextView.setText(R.string.showing_gatt);
                     deviceTextView.append("Device services have been discovered\n");
                 }
             });

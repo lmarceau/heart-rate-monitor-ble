@@ -9,4 +9,8 @@
     <string name="no_battery_level">No battery level</string>
     <string name="connect_button">Connect to device with index:</string>
     <string name="data_button">Show the device data</string>
+    <string name="intro_text">Please scan a device</string>
+    <string name="scanning_text">Scanning&#8230;</string>
+    <string name="select_device">Select the device you wish to connect to</string>
+    <string name="showing_gatt">Showing services for the device</string>
 </resources>
