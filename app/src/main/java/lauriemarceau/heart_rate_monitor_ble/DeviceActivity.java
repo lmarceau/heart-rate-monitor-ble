@@ -27,8 +27,12 @@ public class DeviceActivity extends AppCompatActivity {
         setContentView(R.layout.activity_device);
 
         mDevice =  getIntent().getParcelableExtra("Device");
+
         deviceName = findViewById(R.id.DeviceName);
         deviceName.setText(mDevice.getName());
+
+        batteryLevelValue = findViewById(R.id.batteryLevelValue);
+        heartRateValue = findViewById(R.id.heartRateValueText);
 
     }
 }
