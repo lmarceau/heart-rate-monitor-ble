@@ -25,16 +25,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -46,7 +43,6 @@ public class DeviceScanActivity extends AppCompatActivity {
     private final static int REQUEST_COARSE_LOCATION = 1;
 
     private static final String TAG = DeviceScanActivity.class.getSimpleName();
-    private final int SCAN_PERIOD = 5000; // 5 seconds scan period
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
@@ -54,7 +50,6 @@ public class DeviceScanActivity extends AppCompatActivity {
     private BluetoothGatt mGatt;
     public BluetoothDevice chosenDevice;
     private MenuItem menuScanItem;
-    private Boolean mConnected;
     private Boolean mScanning = false;
     private Handler mHandler;
 
@@ -76,13 +71,10 @@ public class DeviceScanActivity extends AppCompatActivity {
         headerTextView = findViewById(R.id.HeaderTextView);
 
         connectToDevice = findViewById(R.id.ConnectButton);
-        // TO DO : Use lambda function everywhere where it's needed in the code
-        connectToDevice.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if (devicesDiscovered.isEmpty()) return;
-                connectToDeviceSelected();
-            }
-         });
+        connectToDevice.setOnClickListener((View v) -> {
+            if (devicesDiscovered.isEmpty()) return;
+            connectToDeviceSelected();
+        });
 
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
@@ -122,7 +114,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     }
 
     /**
-     * Bluetooth scan that will save all ScanResults into a HashMap
+     * Bluetooth scan that will save all ScanResults into a Arraylist
      */
     private void startScan() {
         if (!hasPermissions() || mScanning) return;
@@ -132,6 +124,7 @@ public class DeviceScanActivity extends AppCompatActivity {
         devicesDiscovered.clear();
         deviceTextView.setText(null);
         deviceIndex = 0;
+        int SCAN_PERIOD = 5000; // 5 seconds scan period
 
         mScanCallback = new BleScanCallback(devicesDiscovered);
 
@@ -153,9 +146,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         Log.d(TAG, "Started scanning.");
     }
 
-    /**
-     * Stop scanning, call scan complete and clean up scan related variables
-     */
     private void stopScan() {
         if (mScanning && mBluetoothAdapter != null && mBluetoothAdapter.isEnabled() && mBluetoothLeScanner != null) {
             mBluetoothLeScanner.stopScan(mScanCallback);
@@ -167,11 +157,9 @@ public class DeviceScanActivity extends AppCompatActivity {
         mHandler = null;
     }
 
-    /**
-     * Log the found devices
-     */
     private void scanComplete() {
         if (devicesDiscovered.isEmpty()) {
+            headerTextView.setText(R.string.no_device_found);
             return;
         }
         for (BluetoothDevice device : devicesDiscovered ) {
@@ -189,7 +177,6 @@ public class DeviceScanActivity extends AppCompatActivity {
     }
 
     public void disconnectGattServer() {
-        mConnected = false;
         if (mGatt != null) {
             mGatt.disconnect();
             mGatt.close();
@@ -217,7 +204,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     }
 
     /**
-     * Verify permissions and if bluetooth is enabled, if not asked for them
+     * Verify permissions and enable bluetooth if it's not
      * @return false when Bluetooth or permission are not enabled
      */
     private boolean hasPermissions() {
@@ -256,11 +243,9 @@ public class DeviceScanActivity extends AppCompatActivity {
         for (BluetoothGattService gattService : gattServices) {
             final String uuid = gattService.getUuid().toString();
             System.out.println("Service discovered: " + uuid);
-            DeviceScanActivity.this.runOnUiThread(new Runnable() {
-                public void run() {
-                    Log.d(TAG, "Service discovered: " + uuid + "\n");
-                }
-            });
+            DeviceScanActivity.this.runOnUiThread(() ->
+                Log.d(TAG, "Service discovered: " + uuid + "\n"));
+
             new ArrayList<HashMap<String, String>>();
             List<BluetoothGattCharacteristic> gattCharacteristics =
                     gattService.getCharacteristics();
@@ -271,19 +256,16 @@ public class DeviceScanActivity extends AppCompatActivity {
 
                 final String charUuid = gattCharacteristic.getUuid().toString();
                 System.out.println("Characteristic discovered for service: " + charUuid);
-                DeviceScanActivity.this.runOnUiThread(new Runnable() {
-                    public void run() {
+                DeviceScanActivity.this.runOnUiThread(() ->
                         Log.d(TAG,"Characteristic discovered for service: "
-                                + charUuid + "\n");
-                    }
-                });
+                                + charUuid + "\n"));
             }
         }
     }
 
     /**
      *  Bluetooth scan callback
-     *  Extends the ScanCallback class to add results in the Hashmap
+     *  Extends the ScanCallback class to add results in the Arraylist
      */
     private class BleScanCallback extends ScanCallback {
 
@@ -347,9 +329,7 @@ public class DeviceScanActivity extends AppCompatActivity {
                 return;
             }
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                DeviceScanActivity.this.runOnUiThread(new Runnable() {
-                    public void run() {
-                        mConnected = true;
+                DeviceScanActivity.this.runOnUiThread(() -> {
                         deviceTextView.setText(null);
                         Log.d(TAG,"Connection success\n");
                         connectToDevice.setVisibility(View.GONE);
@@ -357,28 +337,24 @@ public class DeviceScanActivity extends AppCompatActivity {
                         headerTextView.setVisibility(View.GONE);
                         menuScanItem.setVisible(false);
                         setContentView(R.layout.activity_device);
-                    }
                 });
+
                 chosenDevice = gatt.getDevice();
                 gatt.discoverServices();
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                DeviceScanActivity.this.runOnUiThread(new Runnable() {
-                    public void run() {
+                DeviceScanActivity.this.runOnUiThread(() -> {
                         Log.d(TAG,"Connection failure\n");
                         disconnectGattServer();
-                    }
                 });
             }
         }
 
         @Override
         public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
-            DeviceScanActivity.this.runOnUiThread(new Runnable() {
-                public void run() {
-                    Log.d(TAG,"@string/showing_gatt");
-                }
-            });
+            DeviceScanActivity.this.runOnUiThread(() ->
+                    Log.d(TAG,"@string/showing_gatt"));
+
             displayGattServices(gatt.getServices());
         }
     };
