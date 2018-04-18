@@ -48,12 +48,12 @@ public class DeviceScanActivity extends AppCompatActivity {
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanCallback mScanCallback;
     private BluetoothGatt mGatt;
-    public BluetoothDevice chosenDevice;
     private MenuItem menuScanItem;
     private Boolean mScanning = false;
     private Handler mHandler;
 
     public ArrayList<BluetoothDevice> devicesDiscovered = new ArrayList<>();
+    public BluetoothDevice mDevice;
     public Button connectToDevice;
     public EditText deviceIndexInput;
     public TextView deviceTextView;
@@ -77,7 +77,9 @@ public class DeviceScanActivity extends AppCompatActivity {
         });
 
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
-        mBluetoothAdapter = bluetoothManager.getAdapter();
+        if (bluetoothManager != null) {
+            mBluetoothAdapter = bluetoothManager.getAdapter();
+        }
 
         if (!checkBluetoothSupport(mBluetoothAdapter)) {
             finish();
@@ -173,6 +175,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     public void connectToDeviceSelected() {
         deviceTextView.append("Connecting to device: " + deviceIndexInput.getText() + "\n");
         int deviceSelected = Integer.parseInt(deviceIndexInput.getText().toString());
+        mDevice = devicesDiscovered.get(deviceSelected);
         mGatt = devicesDiscovered.get(deviceSelected).connectGatt(this, true, gattClientCallback);
     }
 
@@ -184,7 +187,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     }
 
     /**
-     * Verify the level of Bluetooth support provided by the hardware.
+     * Verify bluetooth support on this hardware
      * @param bluetoothAdapter System {@link BluetoothAdapter}.
      * @return true if Bluetooth is properly supported, false otherwise.
      */
@@ -320,32 +323,35 @@ public class DeviceScanActivity extends AppCompatActivity {
             super.onConnectionStateChange(gatt, status, newState);
 
             if (status == BluetoothGatt.GATT_FAILURE) {
+                deviceTextView.setText(R.string.connection_failure);
                 Log.d(TAG,"Connection failure\n");
                 disconnectGattServer();
                 return;
             } else if (status != BluetoothGatt.GATT_SUCCESS) {
                 Log.d(TAG, "Connection failure\n");
+                deviceTextView.setText(R.string.connection_failure);
                 disconnectGattServer();
                 return;
             }
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 DeviceScanActivity.this.runOnUiThread(() -> {
-                        deviceTextView.setText(null);
-                        Log.d(TAG,"Connection success\n");
-                        connectToDevice.setVisibility(View.GONE);
-                        deviceIndexInput.setVisibility(View.GONE);
-                        headerTextView.setVisibility(View.GONE);
-                        menuScanItem.setVisible(false);
-                        setContentView(R.layout.activity_device);
+                    deviceTextView.setText(null);
+                    Log.d(TAG,"Connection success\n");
+                    connectToDevice.setVisibility(View.GONE);
+                    deviceIndexInput.setVisibility(View.GONE);
+                    headerTextView.setVisibility(View.GONE);
+                    menuScanItem.setVisible(false);
+                    Intent intent = new Intent(getApplicationContext(), DeviceActivity.class);
+                    intent.putExtra("Device", mDevice);
+                    startActivity(intent);
                 });
-
-                chosenDevice = gatt.getDevice();
                 gatt.discoverServices();
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 DeviceScanActivity.this.runOnUiThread(() -> {
-                        Log.d(TAG,"Connection failure\n");
-                        disconnectGattServer();
+                    deviceTextView.setText(R.string.connection_failure);
+                    Log.d(TAG,"Connection failure\n");
+                    disconnectGattServer();
                 });
             }
         }
