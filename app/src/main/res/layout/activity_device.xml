@@ -13,6 +13,32 @@
         android:orientation="horizontal">
 
         <TextView
+            android:id="@+id/ConnectionStateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_connection_state"
+            android:textSize="18sp"/>
+
+        <Space
+            android:layout_width="5dp"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/ConnectionStateValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/connection_state"
+            android:textSize="18sp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:orientation="horizontal">
+
+        <TextView
             android:id="@+id/DeviceNameText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -32,7 +58,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout2"
+        android:id="@+id/linearLayout3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
@@ -59,7 +85,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout3"
+        android:id="@+id/linearLayout4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
@@ -69,7 +95,7 @@
             android:id="@+id/heartRateText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/label_heart_rate_value"
+            android:text="@string/label_heart_rate"
             android:textSize="18sp"/>
 
         <Space
