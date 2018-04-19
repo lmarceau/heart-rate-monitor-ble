@@ -2,14 +2,17 @@
     <string name="scan_button">Scan</string>
     <string name="label_name_device">Name of the device:</string>
     <string name="label_battery_level">Battery level:</string>
-    <string name="label_heart_rate_value">Heart rate value:</string>
+    <string name="label_heart_rate">Heart rate value:</string>
+    <string name="label_connection_state">Connection state:</string>
     <string name="no_data">No data</string>
     <string name="no_name">No device name</string>
     <string name="no_battery_level">No battery level</string>
+    <string name="connection_state">No connection state</string>
     <string name="connect_button">Connect to device with index:</string>
     <string name="intro_text">Please scan a device</string>
     <string name="scanning_text">Scanning&#8230;</string>
     <string name="select_device">Select the device you wish to connect to</string>
     <string name="no_device_found">No devices were found</string>
-    <string name="connection_failure">Connection failure. Please try again</string>
+    <string name="connection_success">Successful</string>
+    <string name="connection_failure">Failed</string>
 </resources>

@@ -19,8 +19,7 @@ public class GattAttributes extends AppCompatActivity {
     public static UUID HEART_RATE_CONTROL_POINT_CHAR_UUID = convertFromInteger(0x2A39);
     public static UUID BATTERY_SERVICE_UUID = convertFromInteger(0x180F);
     public static UUID BATTERY_LEVEL_UUID = convertFromInteger(0x2A19);
-    public static UUID DEVICE_INFORMATION_SERVICE_UUID = convertFromInteger( 0x180A);
-    public static UUID DEVICE_NAME_UUID = convertFromInteger(0x2A29);
+    public static UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = convertFromInteger(0x2902);
 
     /**
      * convert from an integer to UUID.
@@ -40,8 +39,7 @@ public class GattAttributes extends AppCompatActivity {
          gattAttributes.put(HEART_RATE_CONTROL_POINT_CHAR_UUID, "Heart rate control point");
          gattAttributes.put(BATTERY_SERVICE_UUID, "Battery service");
          gattAttributes.put(BATTERY_LEVEL_UUID, "Battery level");
-         gattAttributes.put(DEVICE_INFORMATION_SERVICE_UUID, "Device information service");
-         gattAttributes.put(DEVICE_NAME_UUID, "Device name");
+         gattAttributes.put(CLIENT_CHARACTERISTIC_CONFIG_UUID, "Client char config");
     }
 
     public static String findName(UUID uuid, String defaultName){
