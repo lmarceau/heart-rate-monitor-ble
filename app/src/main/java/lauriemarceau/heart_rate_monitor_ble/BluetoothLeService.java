@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-// TODO import autrement c'est laid
+// TODO import with another method. This is ugly.
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.BATTERY_LEVEL_UUID;
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.BATTERY_SERVICE_UUID;
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.CLIENT_CHARACTERISTIC_CONFIG_UUID;
@@ -34,11 +34,6 @@ public class BluetoothLeService extends Service {
     private BluetoothGatt mGatt;
     private BluetoothAdapter mBluetoothAdapter;
     private String mBluetoothDeviceAddress;
-    private int mConnectionStatus = STATE_FAILURE;
-
-    private static final int STATE_FAILURE = 0;
-    private static final int STATE_CONNECTING = 1;
-    private static final int STATE_SUCCESS = 2;
 
     public final static String ACTION_CONNECTED =
             "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.ACTION_GATT_CONNECTED";
@@ -97,7 +92,6 @@ public class BluetoothLeService extends Service {
                 && mGatt != null) {
             Log.d(TAG, "Trying to use an existing mGatt for connection.");
             if (mGatt.connect()) {
-                mConnectionStatus = STATE_CONNECTING;
                 return true;
             } else {
                 return false;
@@ -112,7 +106,6 @@ public class BluetoothLeService extends Service {
         mGatt = device.connectGatt(this, false, gattClientCallback);
         Log.d(TAG, "Connecting to selected device");
         mBluetoothDeviceAddress = address;
-        mConnectionStatus = STATE_CONNECTING;
         return true;
     }
 
@@ -137,6 +130,7 @@ public class BluetoothLeService extends Service {
 
     /**
      * Display the Gatt services and characteristics for the found device
+     * Currently used for debug purposes
      * @param gattServices list of the found bluetooth LE gatt services for the selected device
      */
     public void displayGattServices(List<BluetoothGattService> gattServices) {
@@ -163,7 +157,7 @@ public class BluetoothLeService extends Service {
 
     /**
      * Gatt client callback: append the text view, show/hide contextual buttons
-     *                       and discover services
+     * and discover services
      */
     private final BluetoothGattCallback gattClientCallback = new BluetoothGattCallback() {
 
@@ -172,25 +166,21 @@ public class BluetoothLeService extends Service {
             super.onConnectionStateChange(gatt, status, newState);
             String intentAction;
             if (status == BluetoothGatt.GATT_FAILURE) {
-                mConnectionStatus = STATE_FAILURE;
                 Log.d(TAG,"Connection failure, disconnected from server");
                 disconnectGattServer();
                 return;
             } else if (status != BluetoothGatt.GATT_SUCCESS) {
-                mConnectionStatus = STATE_FAILURE;
                 Log.d(TAG,"Connection failure, disconnected from server");
                 disconnectGattServer();
                 return;
             }
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 intentAction = ACTION_CONNECTED;
-                mConnectionStatus = STATE_SUCCESS;
                 broadcastUpdate(intentAction);
                 Log.d(TAG,"Succes: connecting to gatt and discovering services");
                 gatt.discoverServices();
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                mConnectionStatus = STATE_FAILURE;
                 intentAction = ACTION_DISCONNECTED;
                 Log.d(TAG,"Connection failure, disconnected from server");
                 broadcastUpdate(intentAction);
@@ -313,7 +303,6 @@ public class BluetoothLeService extends Service {
 
     public void getSupportedGattServices() {
         if (mGatt == null) return;
-
         displayGattServices(mGatt.getServices());
     }
 }

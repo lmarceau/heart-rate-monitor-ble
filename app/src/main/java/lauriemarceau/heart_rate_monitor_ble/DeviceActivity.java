@@ -122,7 +122,7 @@ public class DeviceActivity extends AppCompatActivity {
                     ACTION_SERVICES_DISCOVERED.equals(action)) {
                 // Show all the supported services and characteristics in the log debug
                 Log.d(TAG,"Displaying the device services");
-                mBluetoothLeService.getSupportedGattServices(); // TODO: ATM only debug display
+                mBluetoothLeService.getSupportedGattServices();
 
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
                 mBluetoothLeService.getBattery();
