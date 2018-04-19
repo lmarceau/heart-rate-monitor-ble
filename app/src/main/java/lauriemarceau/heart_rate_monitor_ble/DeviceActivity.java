@@ -1,7 +1,5 @@
 package lauriemarceau.heart_rate_monitor_ble;
 
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -14,20 +12,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-
 public class DeviceActivity extends AppCompatActivity {
 
     private final static String TAG = DeviceActivity.class.getSimpleName();
 
-    private ArrayList<ArrayList<GattAttributes>> mGattCharacteristics = new ArrayList<>();
     private BluetoothLeService mBluetoothLeService;
-    private BluetoothDevice mDevice;
-    private BluetoothGatt mGatt;
-    private String mDeviceName;
     private String mDeviceAddress;
     private TextView mConnectionState;
-    private boolean mConnected = false;
 
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
@@ -42,7 +33,7 @@ public class DeviceActivity extends AppCompatActivity {
         setContentView(R.layout.activity_device);
 
         final Intent intent = getIntent();
-        mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
+        String mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
         Log.d(TAG, "Device address: " + mDeviceAddress);
 
@@ -81,7 +72,6 @@ public class DeviceActivity extends AppCompatActivity {
     }
 
     private void ClearTextViews() {
-        deviceName.setText(R.string.no_device_found);
         batteryLevelValue.setText(R.string.no_battery_level);
         heartRateValue.setText(R.string.no_data);
     }
@@ -108,31 +98,36 @@ public class DeviceActivity extends AppCompatActivity {
         }
     };
 
-    // Handles various events fired by the Service.
-    // ACTION_GATT_CONNECTED: connected to a GATT server.
-    // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
-    // ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
-    // ACTION_DATA_AVAILABLE: received data from the device. This can be a
-    // result of read or notification operations.
+    /**
+    * Handles various events fired by the Service.
+    * ACTION_GATT_CONNECTED: connected to a GATT server.
+    * ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
+    * ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
+    * ACTION_DATA_AVAILABLE: received data from the device. This can be a
+    * result of read or notification operations.
+    */
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+
             if (BluetoothLeService.ACTION_CONNECTED.equals(action)) {
-                mConnected = true;
                 updateConnectionState(R.string.connection_success);
+
             } else if (BluetoothLeService.ACTION_DISCONNECTED.equals(action)) {
-                mConnected = false;
                 updateConnectionState(R.string.connection_failure);
                 ClearTextViews();
+
             } else if (BluetoothLeService.
                     ACTION_SERVICES_DISCOVERED.equals(action)) {
-                // Show all the supported services and characteristics on the
-                // user interface.
+                // Show all the supported services and characteristics in the log debug
                 Log.d(TAG,"Displaying the device services");
-                mBluetoothLeService.getSupportedGattServices(); // TODO: ATM only debug display
+                mBluetoothLeService.getSupportedGattServices();
+
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+                mBluetoothLeService.getBattery();
+                displayHeartRateData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA_HEART_RATE));
+                displayBatteryData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA_BATTERY));
             }
         }
     };
@@ -150,10 +145,16 @@ public class DeviceActivity extends AppCompatActivity {
         runOnUiThread(() ->  mConnectionState.setText(resourceId));
     }
 
-    private void displayData(String data) {
+    private void displayHeartRateData(String data) {
         if (data != null) {
-            Log.d(TAG, "Data received: " + data);
+            Log.d(TAG, "Heart rate received: " + data);
             heartRateValue.setText(data);
+        }
+    }
+    private void displayBatteryData(String data) {
+        if (data != null) {
+            Log.d(TAG, "Battery level received: " + data);
+            batteryLevelValue.setText(String.valueOf(data));
         }
     }
 }
