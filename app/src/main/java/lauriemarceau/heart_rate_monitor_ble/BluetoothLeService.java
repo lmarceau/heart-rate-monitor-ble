@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-// TODO import with another method. This is ugly.
+// TODO import another way?
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.BATTERY_LEVEL_UUID;
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.BATTERY_SERVICE_UUID;
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.CLIENT_CHARACTERISTIC_CONFIG_UUID;
@@ -42,12 +42,11 @@ public class BluetoothLeService extends Service {
     public final static String ACTION_SERVICES_DISCOVERED =
             "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE =
-            "lauriemarceau.heart_rate_monitor_blebluetooth.le.ACTION_DATA_AVAILABLE";
+            "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA_HEART_RATE =
             "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.EXTRA_DATA_HEART_RATE";
     public final static String EXTRA_DATA_BATTERY =
             "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.EXTRA_DATA_BATTERY";
-
 
     @Override
     public IBinder onBind(Intent intent) {
