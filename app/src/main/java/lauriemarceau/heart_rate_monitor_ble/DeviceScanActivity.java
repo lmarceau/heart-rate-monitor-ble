@@ -22,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     public BluetoothDevice mDevice;
     public EditText deviceIndexInput;
     public TextView deviceTextView;
-    public TextView headerTextView;
+    public ProgressBar progressBar;
     public int deviceIndex = 0;
 
     @Override
@@ -59,8 +60,7 @@ public class DeviceScanActivity extends AppCompatActivity {
         deviceTextView = findViewById(R.id.DeviceTextView);
         deviceTextView.setMovementMethod(new ScrollingMovementMethod());
         deviceIndexInput = findViewById(R.id.InputIndex);
-        headerTextView = findViewById(R.id.HeaderTextView);
-
+        progressBar = findViewById(R.id.ProgressBar);
 
         connectToDevice = findViewById(R.id.ConnectButton);
         connectToDevice.setOnClickListener((View v) -> onClickConnectButton());
@@ -155,7 +155,7 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         mHandler = new Handler();
         mHandler.postDelayed(this::stopScan, SCAN_PERIOD);
-        headerTextView.setText(R.string.scanning_text);
+        progressBar.setVisibility(View.VISIBLE);
         mScanning = true;
         Log.d(TAG, "Started scanning.");
     }
@@ -173,15 +173,15 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     private void scanComplete() {
         if (devicesDiscovered.isEmpty()) {
-            headerTextView.setText(R.string.no_device_found);
+            //headerTextView.setText(R.string.no_device_found);
             return;
         }
         for (BluetoothDevice device : devicesDiscovered ) {
             Log.d(TAG, "Found device: " + device.getAddress() );
         }
+        progressBar.setVisibility(View.INVISIBLE);
         deviceIndexInput.setVisibility(View.VISIBLE);
         connectToDevice.setVisibility(View.VISIBLE);
-        headerTextView.setText(R.string.select_device);
     }
 
     /**
