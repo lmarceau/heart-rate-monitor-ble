@@ -133,11 +133,10 @@ public class DeviceScanActivity extends AppCompatActivity {
     private void startScan() {
         if (!hasPermissions() || mScanning) return;
 
-        //mBluetoothLeService.disconnectGattServer(); TO DO
-
         devicesDiscovered.clear();
         deviceTextView.setText(null);
         deviceIndex = 0;
+
         int SCAN_PERIOD = 5000; // 5 seconds scan period
 
         mScanCallback = new BleScanCallback(devicesDiscovered);
@@ -160,6 +159,9 @@ public class DeviceScanActivity extends AppCompatActivity {
         Log.d(TAG, "Started scanning.");
     }
 
+    /**
+     * Stop scanning for BLE devices after 5 seconds
+     */
     private void stopScan() {
         if (mScanning && mBluetoothAdapter != null && mBluetoothAdapter.isEnabled() && mBluetoothLeScanner != null) {
             mBluetoothLeScanner.stopScan(mScanCallback);
@@ -173,21 +175,20 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     private void scanComplete() {
         if (devicesDiscovered.isEmpty()) {
-            //headerTextView.setText(R.string.no_device_found);
             return;
         }
         for (BluetoothDevice device : devicesDiscovered ) {
             Log.d(TAG, "Found device: " + device.getAddress() );
         }
-        progressBar.setVisibility(View.INVISIBLE);
         deviceIndexInput.setVisibility(View.VISIBLE);
         connectToDevice.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.INVISIBLE);
     }
 
     /**
      * Verify bluetooth support on this hardware
-     * @param bluetoothAdapter System {@link BluetoothAdapter}.
-     * @return true if Bluetooth is properly supported, false otherwise.
+     * @param bluetoothAdapter {@link BluetoothAdapter}
+     * @return true if Bluetooth is properly supported, false otherwise
      */
     private boolean checkBluetoothSupport(BluetoothAdapter bluetoothAdapter) {
 
@@ -234,7 +235,6 @@ public class DeviceScanActivity extends AppCompatActivity {
     }
 
     /**
-     *  Bluetooth scan callback
      *  Extends the ScanCallback class to add results in the Arraylist
      */
     private class BleScanCallback extends ScanCallback {
@@ -258,10 +258,12 @@ public class DeviceScanActivity extends AppCompatActivity {
                 }
             }
         }
+
         @Override
         public void onScanFailed(int errorCode) {
             Log.e(TAG, "BLE Scan Failed with code " + errorCode);
         }
+
         private void addScanResult(ScanResult result) {
             deviceTextView.append("Index: " + deviceIndex + ", Device Name: "
                     + result.getDevice().getName() + ", Address: "
@@ -278,6 +280,5 @@ public class DeviceScanActivity extends AppCompatActivity {
             }
         }
     }
-
 }
 
