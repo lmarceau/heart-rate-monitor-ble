@@ -15,7 +15,7 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark">
         <activity
             android:name=".DeviceScanActivity"
-            android:label="Heart rate monitor"
+            android:label="@string/app_name"
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,7 +26,7 @@
 
         <activity
             android:name=".GattAttributes"
-            android:label="Heart rate monitor"
+            android:label="@string/app_name"
             android:theme="@style/AppTheme">
         </activity>
         <activity

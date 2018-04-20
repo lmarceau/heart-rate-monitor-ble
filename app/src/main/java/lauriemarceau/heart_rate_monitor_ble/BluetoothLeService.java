@@ -27,6 +27,10 @@ import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.HEART_RATE_CON
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.HEART_RATE_MEASUREMENT_CHAR_UUID;
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.HEART_RATE_SERVICE_UUID;
 
+/**
+ * BluetoothLeService
+ * Extends service : Android application component without a UI that runs on the main thread
+ */
 public class BluetoothLeService extends Service {
 
     private final static String TAG = BluetoothLeService.class.getSimpleName();
@@ -67,6 +71,10 @@ public class BluetoothLeService extends Service {
 
     private final IBinder mBinder = new LocalBinder();
 
+    /**
+     * Initialize the bluetoothAdapter {@link BluetoothAdapter}
+     * @return false when bluetooth initialization wasn't successful, true otherwise
+     */
     public boolean initBluetooth() {
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         if (bluetoothManager != null) {
@@ -79,6 +87,11 @@ public class BluetoothLeService extends Service {
         }
     }
 
+    /**
+     * Connect to a BLE device
+     * @param address MAC address
+     * @return true if the connection was successful, false otherwise
+     */
     public boolean connectToDevice(final String address) {
 
         if (mBluetoothAdapter == null || address == null) {
@@ -120,6 +133,10 @@ public class BluetoothLeService extends Service {
         mGatt = null;
     }
 
+    /**
+     * Disconnect the gatt server when a connection state changed happened and failed
+     * i.e. when GATT_FAILED or !GATT_SUCCESS or STATE_DISCONNECTED
+     */
     public void disconnectGattServer() {
         if (mGatt != null) {
             mGatt.disconnect();
@@ -230,6 +247,12 @@ public class BluetoothLeService extends Service {
         }
     };
 
+    /**
+     * Enables the notification mode, writing the descriptor tells the sensor to
+     * start streaming data
+     * @param gatt {@link BluetoothGatt}
+     * @param enabled set notification on for the heart rate service
+     */
     public void setHeartRateNotification(BluetoothGatt gatt,
                                          boolean enabled) {
         BluetoothGattCharacteristic characteristic =
@@ -247,11 +270,22 @@ public class BluetoothLeService extends Service {
         gatt.writeDescriptor(descriptor);
     }
 
+    /**
+     * Notify DeviceActivity of key events happening in BluetoothLeService
+     * @param action ACTION_CONNECTED, ACTION_DISCONNECTED, ACTION_DATA_AVAILABLE or
+     *               ACTION_SERVICES_DISCOVERED
+     */
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
         sendBroadcast(intent);
     }
 
+    /**
+     * Notify DeviceActivity of key events happening in BluetoothLeService
+     * @param action ACTION_CONNECTED, ACTION_DISCONNECTED, ACTION_DATA_AVAILABLE or
+     *               ACTION_SERVICES_DISCOVERED
+     * @param characteristic {@link BluetoothGattCharacteristic}
+     */
     private void broadcastUpdate(final String action,
                                  final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
@@ -283,6 +317,9 @@ public class BluetoothLeService extends Service {
         sendBroadcast(intent);
     }
 
+    /**
+     * Get the battery level from the battery service of the heart rate monitor
+     */
     public void getBattery() {
         BluetoothGattService batteryService = mGatt.getService(BATTERY_SERVICE_UUID);
         if(batteryService == null) {
@@ -300,6 +337,9 @@ public class BluetoothLeService extends Service {
         Log.v(TAG, "batteryLevel = " + mGatt.readCharacteristic(batteryLevel));
     }
 
+    /**
+     * Get services from the device and call the display method useful for debug purposes
+     */
     public void getSupportedGattServices() {
         if (mGatt == null) return;
         displayGattServices(mGatt.getServices());
