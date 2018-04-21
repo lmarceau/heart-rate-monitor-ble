@@ -14,16 +14,15 @@ import android.os.Handler;
 import android.content.pm.PackageManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,27 +42,18 @@ public class DeviceScanActivity extends AppCompatActivity {
     private ScanCallback mScanCallback;
     private Boolean mScanning = false;
     private Handler mHandler;
+    private ListView mDeviceListView;
+    private ArrayAdapter<BluetoothDevice> arrayAdapter;
 
     public ArrayList<BluetoothDevice> devicesDiscovered = new ArrayList<>();
-    public Button connectToDevice;
-    public BluetoothDevice mDevice;
-    public EditText deviceIndexInput;
-    public TextView deviceTextView;
     public ProgressBar progressBar;
-    public int deviceIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scan_device);
 
-        deviceTextView = findViewById(R.id.DeviceTextView);
-        deviceTextView.setMovementMethod(new ScrollingMovementMethod());
-        deviceIndexInput = findViewById(R.id.InputIndex);
-        progressBar = findViewById(R.id.ProgressBar);
-
-        connectToDevice = findViewById(R.id.ConnectButton);
-        connectToDevice.setOnClickListener((View v) -> onClickConnectButton());
+        progressBar = findViewById(R.id.progress_bar);
 
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         if (bluetoothManager != null) {
@@ -73,6 +63,14 @@ public class DeviceScanActivity extends AppCompatActivity {
         if (!checkBluetoothSupport(mBluetoothAdapter)) {
             finish();
         }
+
+        mDeviceListView = findViewById(R.id.device_list);
+        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,
+                devicesDiscovered);
+
+        mDeviceListView.setOnItemClickListener((parent, view, position, id)
+                -> onClickToConnect(position));
+
     }
 
     @Override
@@ -111,19 +109,21 @@ public class DeviceScanActivity extends AppCompatActivity {
     }
 
     /**
-     * When the user ask to connect, intent extras are passed to the deviceActivity
+     * When the user click on a device to connect, intent extras are passed to the deviceActivity
      * and this activity is initiated
      */
-    private void onClickConnectButton() {
+    private void onClickToConnect(int position) {
         if (devicesDiscovered.isEmpty()) return;
-        Log.d(TAG, "Connecting to device " + deviceIndexInput.getText().toString());
 
-        int deviceSelected = Integer.parseInt(deviceIndexInput.getText().toString());
-        mDevice = devicesDiscovered.get(deviceSelected);
+        BluetoothDevice selectedDevice = devicesDiscovered.get(position);
+        Toast.makeText(getApplicationContext(), "Selected: "
+                        + selectedDevice.getName(), Toast.LENGTH_LONG).show();
+
+        Log.d(TAG, "Connecting to device " + selectedDevice.getName());
 
         final Intent intent = new Intent(this, DeviceActivity.class);
-        intent.putExtra(DeviceActivity.EXTRAS_DEVICE_NAME, mDevice.getName());
-        intent.putExtra(DeviceActivity.EXTRAS_DEVICE_ADDRESS, mDevice.getAddress());
+        intent.putExtra(DeviceActivity.EXTRAS_DEVICE_NAME, selectedDevice.getName());
+        intent.putExtra(DeviceActivity.EXTRAS_DEVICE_ADDRESS, selectedDevice.getAddress());
         startActivity(intent);
     }
 
@@ -134,8 +134,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         if (!hasPermissions() || mScanning) return;
 
         devicesDiscovered.clear();
-        deviceTextView.setText(null);
-        deviceIndex = 0;
 
         int SCAN_PERIOD = 5000; // 5 seconds scan period
 
@@ -180,8 +178,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         for (BluetoothDevice device : devicesDiscovered ) {
             Log.d(TAG, "Found device: " + device.getAddress() );
         }
-        deviceIndexInput.setVisibility(View.VISIBLE);
-        connectToDevice.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.INVISIBLE);
     }
 
@@ -247,8 +243,6 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            // TO DO: replace arraylist by hashmap so in case of multiple found devices it
-            // won't have to iterate through the whole list
             if (result.getDevice().getName() != null) {
                 if (devicesDiscovered.isEmpty()) {
                     addScanResult(result);
@@ -265,19 +259,10 @@ public class DeviceScanActivity extends AppCompatActivity {
         }
 
         private void addScanResult(ScanResult result) {
-            deviceTextView.append("Index: " + deviceIndex + ", Device Name: "
-                    + result.getDevice().getName() + ", Address: "
-                    + result.getDevice().getAddress() + "\n");
             devicesDiscovered.add(result.getDevice());
-            deviceIndex++;
-
-            // auto scroll for text view
-            final int scrollAmount = deviceTextView.getLayout().getLineTop
-                    (deviceTextView.getLineCount()) - deviceTextView.getHeight();
-            // if there is no need to scroll, scrollAmount will be <= 0
-            if (scrollAmount > 0) {
-                deviceTextView.scrollTo(0, scrollAmount);
-            }
+            Log.d(TAG, "Added device: " + result.getDevice().getName()
+                    + ", with address: " + result.getDevice().getAddress());
+            mDeviceListView.setAdapter(arrayAdapter);
         }
     }
 }
