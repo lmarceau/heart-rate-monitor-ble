@@ -193,7 +193,7 @@ public class BluetoothLeService extends Service {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 intentAction = ACTION_CONNECTED;
                 broadcastUpdate(intentAction);
-                Log.d(TAG,"Succes: connecting to gatt and discovering services");
+                Log.d(TAG,"Success: connecting to gatt and discovering services");
                 gatt.discoverServices();
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
@@ -333,8 +333,8 @@ public class BluetoothLeService extends Service {
             Log.d(TAG, "Battery level not found!");
             return;
         }
-        mGatt.readCharacteristic(batteryLevel);
         Log.v(TAG, "batteryLevel = " + mGatt.readCharacteristic(batteryLevel));
+        mGatt.readCharacteristic(batteryLevel);
     }
 
     /**

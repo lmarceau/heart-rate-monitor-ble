@@ -33,7 +33,7 @@ public class DeviceActivity extends AppCompatActivity {
         final Intent intent = getIntent();
         String mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
-        Log.d(TAG, "Device address: " + mDeviceAddress);
+        Log.d(TAG, "Device address: " + mDeviceAddress + ", device name: " + mDeviceName);
 
         this.setTitle(mDeviceName);
 
@@ -84,22 +84,20 @@ public class DeviceActivity extends AppCompatActivity {
                 Log.e(TAG, "Failure to start bluetooth");
                 finish();
             }
-            // Automatically connects to the device upon successful start-up initialization.
             mBluetoothLeService.connectToDevice(mDeviceAddress);
+            Log.d(TAG, "Service is now connected to the device: " + mDeviceAddress);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName){
+            Log.d(TAG, "Service is now disconnected");
             mBluetoothLeService = null;
         }
     };
 
     /**
-    * Handles various events fired by the Service.
-    * ACTION_GATT_CONNECTED: connected to a GATT server.
-    * ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
-    * ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
-    * ACTION_DATA_AVAILABLE: received data from the device. This can be a
+    * Handles various events fired by the Service: ACTION_GATT_CONNECTED, ACTION_GATT_DISCONNECTED,
+    * ACTION_GATT_SERVICES_DISCOVERED or ACTION_DATA_AVAILABLE. This can be a
     * result of read or notification operations.
     */
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
@@ -108,9 +106,11 @@ public class DeviceActivity extends AppCompatActivity {
             final String action = intent.getAction();
 
             if (BluetoothLeService.ACTION_CONNECTED.equals(action)) {
+                Log.d(TAG,"ACTION_CONNECTED");
                 updateConnectionState(R.string.connection_success);
 
             } else if (BluetoothLeService.ACTION_DISCONNECTED.equals(action)) {
+                Log.d(TAG,"ACTION_DISCONNECTED");
                 updateConnectionState(R.string.connection_failure);
                 ClearTextViews();
 
@@ -121,6 +121,7 @@ public class DeviceActivity extends AppCompatActivity {
                 mBluetoothLeService.getSupportedGattServices();
 
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+                Log.d(TAG,"ACTION_DATA_AVAILABLE");
                 mBluetoothLeService.getBattery();
                 displayHeartRateData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA_HEART_RATE));
                 displayBatteryData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA_BATTERY));
