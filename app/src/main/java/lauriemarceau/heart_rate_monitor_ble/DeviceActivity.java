@@ -18,12 +18,10 @@ public class DeviceActivity extends AppCompatActivity {
 
     private BluetoothLeService mBluetoothLeService;
     private String mDeviceAddress;
-    private TextView mConnectionState;
 
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
 
-    public TextView deviceName;
     public TextView batteryLevelValue;
     public TextView heartRateValue;
 
@@ -37,10 +35,8 @@ public class DeviceActivity extends AppCompatActivity {
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
         Log.d(TAG, "Device address: " + mDeviceAddress);
 
-        deviceName = findViewById(R.id.DeviceNameValue);
-        deviceName.setText(mDeviceName);
+        this.setTitle(mDeviceName);
 
-        mConnectionState = findViewById(R.id.ConnectionStateValue);
         batteryLevelValue = findViewById(R.id.batteryLevelValue);
         heartRateValue = findViewById(R.id.heartRateValueText);
 
@@ -142,7 +138,7 @@ public class DeviceActivity extends AppCompatActivity {
     }
 
     private void updateConnectionState(final int resourceId) {
-        runOnUiThread(() ->  mConnectionState.setText(resourceId));
+        runOnUiThread(() ->  Log.d(TAG, "New connection state is: " + resourceId));
     }
 
     private void displayHeartRateData(String data) {
@@ -154,7 +150,7 @@ public class DeviceActivity extends AppCompatActivity {
     private void displayBatteryData(String data) {
         if (data != null) {
             Log.d(TAG, "Battery level received: " + data);
-            batteryLevelValue.setText(String.valueOf(data));
+            batteryLevelValue.setText(getString(R.string.battery_value, String.valueOf(data)));
         }
     }
 }
