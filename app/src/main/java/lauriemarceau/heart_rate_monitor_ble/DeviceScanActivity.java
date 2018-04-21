@@ -47,9 +47,9 @@ public class DeviceScanActivity extends AppCompatActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanCallback mScanCallback;
+    private ListView mDeviceListView;
     private Boolean mScanning = false;
     private Handler mHandler;
-    private ListView mDeviceListView;
 
     public ArrayList<BluetoothDevice> devicesDiscovered = new ArrayList<>();
     public ProgressBar progressBar;
@@ -68,85 +68,15 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         if (!checkBluetoothSupport(mBluetoothAdapter)) {
             finish();
-
         }
 
         mDeviceListView = findViewById(R.id.device_list);
-        ArrayList<BLEDevice> BLEDeviceList = new ArrayList<>();
-        mArrayAdapter = new ArrayBLEAdapter(this,BLEDeviceList);
+        mArrayAdapter = new ArrayBLEAdapter(this, devicesDiscovered);
         mDeviceListView.setAdapter(mArrayAdapter);
 
         mDeviceListView.setOnItemClickListener((parent, view, position, id)
                 -> onClickToConnect(position));
 
-    }
-
-    private class ArrayBLEAdapter extends ArrayAdapter<BLEDevice> {
-
-        private Context mContext;
-        private List<BLEDevice> devices;
-
-        // TODO @layoutres cetait quoi??
-        private ArrayBLEAdapter(@NonNull Context context, ArrayList<BLEDevice> list) {
-            super(context, 0 , list);
-            mContext = context;
-            devices = list;
-        }
-
-        @NonNull
-        @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-
-            if (convertView == null)
-                convertView = LayoutInflater.from(mContext).inflate(R.layout.device_list,
-                        parent,false);
-
-            BLEDevice currentDevice = devices.get(position);
-
-            TextView deviceAddress = convertView.findViewById(R.id.device_address);
-            deviceAddress.setText(currentDevice.getDeviceAddress());
-
-            TextView deviceName = convertView.findViewById(R.id.device_name);
-            deviceName.setText(currentDevice.getDeviceName());
-
-            return convertView;
-        }
-    }
-
-    public class BLEDevice { // TODO change de 2 a rien
-        private BluetoothDevice device;
-        private String deviceName;
-        private String deviceAddress;
-
-        public BLEDevice(BluetoothDevice device, String deviceName, String deviceAddress) {
-            this.device = device;
-            this.deviceName = deviceName;
-            this.deviceAddress = deviceAddress;
-        }
-
-        public BluetoothDevice getBLEdevice() {
-            return device;
-        }
-
-        public void setBLEdevice() { // TODO set au travers de tout ton code
-            this.device = device;
-        }
-
-        public String getDeviceName() {
-            return deviceName;
-        }
-
-        public void setDeviceName() { // TODO maniere de simplifier?
-            this.deviceName = device.getName();
-        }
-
-        public String getDeviceAddress() {
-            return deviceAddress;
-        }
-
-        public void setDeviceAddress() {
-            this.deviceAddress = device.getAddress();
-        }
     }
 
     @Override
@@ -257,7 +187,7 @@ public class DeviceScanActivity extends AppCompatActivity {
             return;
         }
         for (BluetoothDevice device : devicesDiscovered ) {
-            Log.d(TAG, "Found device: " + device.getAddress() );
+            Log.d(TAG, "Found device: " + device.getName() + " " + device.getAddress() );
         }
         progressBar.setVisibility(View.INVISIBLE);
     }
@@ -324,13 +254,15 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            if (result.getDevice().getName() != null) {
-                if (devicesDiscovered.isEmpty()) {
-                    addScanResult(result);
-                } else if (!devicesDiscovered.get(0).getAddress().contains
-                        (result.getDevice().getAddress())) {
-                    addScanResult(result);
-                }
+            if (devicesDiscovered.isEmpty()) {
+                Log.d(TAG, "First device found: " + result.getDevice().getAddress());
+                addLeScanResult(result);
+                return;
+            }
+
+            // This would be better with a HashMap
+            if (!devicesDiscovered.contains(result.getDevice())) {
+                addLeScanResult(result);
             }
         }
 
@@ -339,11 +271,50 @@ public class DeviceScanActivity extends AppCompatActivity {
             Log.e(TAG, "BLE Scan Failed with code " + errorCode);
         }
 
-        private void addScanResult(ScanResult result) {
+        private void addLeScanResult(ScanResult result) {
             devicesDiscovered.add(result.getDevice());
             Log.d(TAG, "Added device: " + result.getDevice().getName()
                     + ", with address: " + result.getDevice().getAddress());
             mDeviceListView.setAdapter(mArrayAdapter);
+        }
+    }
+
+    /**
+     * Custom adapter for the {@link ListView}
+     */
+    private class ArrayBLEAdapter extends ArrayAdapter<BluetoothDevice> {
+
+        private Context mContext;
+        private List<BluetoothDevice> devices;
+
+        private ArrayBLEAdapter(@NonNull Context context, ArrayList<BluetoothDevice> list) {
+            super(context, 0 , list);
+            mContext = context;
+            devices = list;
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+
+            if (convertView == null)
+                convertView = LayoutInflater.from(mContext).inflate(R.layout.device_list,
+                        parent,false);
+
+            BluetoothDevice currentDevice = devices.get(position);
+
+            TextView deviceAddress = convertView.findViewById(R.id.device_address);
+            deviceAddress.setText(currentDevice.getAddress());
+
+            TextView deviceName = convertView.findViewById(R.id.device_name);
+            if (currentDevice.getName() != null) {
+                deviceName.setText(currentDevice.getName());
+            }
+            else {
+                deviceName.setText(R.string.no_name);
+            }
+
+            return convertView;
         }
     }
 }
