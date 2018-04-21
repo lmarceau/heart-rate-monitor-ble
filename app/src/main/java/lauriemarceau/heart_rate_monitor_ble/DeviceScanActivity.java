@@ -9,21 +9,26 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,32 +43,23 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     private static final String TAG = DeviceScanActivity.class.getSimpleName();
 
+    private ArrayBLEAdapter mArrayAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanCallback mScanCallback;
     private Boolean mScanning = false;
     private Handler mHandler;
+    private ListView mDeviceListView;
 
     public ArrayList<BluetoothDevice> devicesDiscovered = new ArrayList<>();
-    public Button connectToDevice;
-    public BluetoothDevice mDevice;
-    public EditText deviceIndexInput;
-    public TextView deviceTextView;
     public ProgressBar progressBar;
-    public int deviceIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scan_device);
 
-        deviceTextView = findViewById(R.id.DeviceTextView);
-        deviceTextView.setMovementMethod(new ScrollingMovementMethod());
-        deviceIndexInput = findViewById(R.id.InputIndex);
-        progressBar = findViewById(R.id.ProgressBar);
-
-        connectToDevice = findViewById(R.id.ConnectButton);
-        connectToDevice.setOnClickListener((View v) -> onClickConnectButton());
+        progressBar = findViewById(R.id.progress_bar);
 
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         if (bluetoothManager != null) {
@@ -72,6 +68,84 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         if (!checkBluetoothSupport(mBluetoothAdapter)) {
             finish();
+
+        }
+
+        mDeviceListView = findViewById(R.id.device_list);
+        ArrayList<BLEDevice> BLEDeviceList = new ArrayList<>();
+        mArrayAdapter = new ArrayBLEAdapter(this,BLEDeviceList);
+        mDeviceListView.setAdapter(mArrayAdapter);
+
+        mDeviceListView.setOnItemClickListener((parent, view, position, id)
+                -> onClickToConnect(position));
+
+    }
+
+    private class ArrayBLEAdapter extends ArrayAdapter<BLEDevice> {
+
+        private Context mContext;
+        private List<BLEDevice> devices;
+
+        // TODO @layoutres cetait quoi??
+        private ArrayBLEAdapter(@NonNull Context context, ArrayList<BLEDevice> list) {
+            super(context, 0 , list);
+            mContext = context;
+            devices = list;
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+
+            if (convertView == null)
+                convertView = LayoutInflater.from(mContext).inflate(R.layout.device_list,
+                        parent,false);
+
+            BLEDevice currentDevice = devices.get(position);
+
+            TextView deviceAddress = convertView.findViewById(R.id.device_address);
+            deviceAddress.setText(currentDevice.getDeviceAddress());
+
+            TextView deviceName = convertView.findViewById(R.id.device_name);
+            deviceName.setText(currentDevice.getDeviceName());
+
+            return convertView;
+        }
+    }
+
+    public class BLEDevice { // TODO change de 2 a rien
+        private BluetoothDevice device;
+        private String deviceName;
+        private String deviceAddress;
+
+        public BLEDevice(BluetoothDevice device, String deviceName, String deviceAddress) {
+            this.device = device;
+            this.deviceName = deviceName;
+            this.deviceAddress = deviceAddress;
+        }
+
+        public BluetoothDevice getBLEdevice() {
+            return device;
+        }
+
+        public void setBLEdevice() { // TODO set au travers de tout ton code
+            this.device = device;
+        }
+
+        public String getDeviceName() {
+            return deviceName;
+        }
+
+        public void setDeviceName() { // TODO maniere de simplifier?
+            this.deviceName = device.getName();
+        }
+
+        public String getDeviceAddress() {
+            return deviceAddress;
+        }
+
+        public void setDeviceAddress() {
+            this.deviceAddress = device.getAddress();
         }
     }
 
@@ -111,19 +185,26 @@ public class DeviceScanActivity extends AppCompatActivity {
     }
 
     /**
-     * When the user ask to connect, intent extras are passed to the deviceActivity
+     * When the user click on a device to connect, intent extras are passed to the deviceActivity
      * and this activity is initiated
      */
-    private void onClickConnectButton() {
+    private void onClickToConnect(int position) {
         if (devicesDiscovered.isEmpty()) return;
-        Log.d(TAG, "Connecting to device " + deviceIndexInput.getText().toString());
 
-        int deviceSelected = Integer.parseInt(deviceIndexInput.getText().toString());
-        mDevice = devicesDiscovered.get(deviceSelected);
+        if (position >= devicesDiscovered.size()) {
+            Log.w(TAG, "Illegal position.");
+            return;
+        }
+
+        BluetoothDevice selectedDevice = devicesDiscovered.get(position);
+        Toast.makeText(getApplicationContext(), "Selected: "
+                        + selectedDevice.getName(), Toast.LENGTH_LONG).show();
+
+        Log.d(TAG, "Connecting to device " + selectedDevice.getName());
 
         final Intent intent = new Intent(this, DeviceActivity.class);
-        intent.putExtra(DeviceActivity.EXTRAS_DEVICE_NAME, mDevice.getName());
-        intent.putExtra(DeviceActivity.EXTRAS_DEVICE_ADDRESS, mDevice.getAddress());
+        intent.putExtra(DeviceActivity.EXTRAS_DEVICE_NAME, selectedDevice.getName());
+        intent.putExtra(DeviceActivity.EXTRAS_DEVICE_ADDRESS, selectedDevice.getAddress());
         startActivity(intent);
     }
 
@@ -134,8 +215,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         if (!hasPermissions() || mScanning) return;
 
         devicesDiscovered.clear();
-        deviceTextView.setText(null);
-        deviceIndex = 0;
 
         int SCAN_PERIOD = 5000; // 5 seconds scan period
 
@@ -180,8 +259,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         for (BluetoothDevice device : devicesDiscovered ) {
             Log.d(TAG, "Found device: " + device.getAddress() );
         }
-        deviceIndexInput.setVisibility(View.VISIBLE);
-        connectToDevice.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.INVISIBLE);
     }
 
@@ -247,8 +324,6 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            // TO DO: replace arraylist by hashmap so in case of multiple found devices it
-            // won't have to iterate through the whole list
             if (result.getDevice().getName() != null) {
                 if (devicesDiscovered.isEmpty()) {
                     addScanResult(result);
@@ -265,19 +340,10 @@ public class DeviceScanActivity extends AppCompatActivity {
         }
 
         private void addScanResult(ScanResult result) {
-            deviceTextView.append("Index: " + deviceIndex + ", Device Name: "
-                    + result.getDevice().getName() + ", Address: "
-                    + result.getDevice().getAddress() + "\n");
             devicesDiscovered.add(result.getDevice());
-            deviceIndex++;
-
-            // auto scroll for text view
-            final int scrollAmount = deviceTextView.getLayout().getLineTop
-                    (deviceTextView.getLineCount()) - deviceTextView.getHeight();
-            // if there is no need to scroll, scrollAmount will be <= 0
-            if (scrollAmount > 0) {
-                deviceTextView.scrollTo(0, scrollAmount);
-            }
+            Log.d(TAG, "Added device: " + result.getDevice().getName()
+                    + ", with address: " + result.getDevice().getAddress());
+            mDeviceListView.setAdapter(mArrayAdapter);
         }
     }
 }
