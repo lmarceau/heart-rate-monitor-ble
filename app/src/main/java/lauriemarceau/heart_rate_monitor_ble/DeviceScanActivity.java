@@ -9,19 +9,25 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -37,13 +43,13 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     private static final String TAG = DeviceScanActivity.class.getSimpleName();
 
+    private ArrayBLEAdapter mArrayAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanCallback mScanCallback;
     private Boolean mScanning = false;
     private Handler mHandler;
     private ListView mDeviceListView;
-    private ArrayAdapter<BluetoothDevice> arrayAdapter;
 
     public ArrayList<BluetoothDevice> devicesDiscovered = new ArrayList<>();
     public ProgressBar progressBar;
@@ -62,15 +68,85 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         if (!checkBluetoothSupport(mBluetoothAdapter)) {
             finish();
+
         }
 
         mDeviceListView = findViewById(R.id.device_list);
-        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,
-                devicesDiscovered);
+        ArrayList<BLEDevice> BLEDeviceList = new ArrayList<>();
+        mArrayAdapter = new ArrayBLEAdapter(this,BLEDeviceList);
+        mDeviceListView.setAdapter(mArrayAdapter);
 
         mDeviceListView.setOnItemClickListener((parent, view, position, id)
                 -> onClickToConnect(position));
 
+    }
+
+    private class ArrayBLEAdapter extends ArrayAdapter<BLEDevice> {
+
+        private Context mContext;
+        private List<BLEDevice> devices;
+
+        // TODO @layoutres cetait quoi??
+        private ArrayBLEAdapter(@NonNull Context context, ArrayList<BLEDevice> list) {
+            super(context, 0 , list);
+            mContext = context;
+            devices = list;
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+
+            if (convertView == null)
+                convertView = LayoutInflater.from(mContext).inflate(R.layout.device_list,
+                        parent,false);
+
+            BLEDevice currentDevice = devices.get(position);
+
+            TextView deviceAddress = convertView.findViewById(R.id.device_address);
+            deviceAddress.setText(currentDevice.getDeviceAddress());
+
+            TextView deviceName = convertView.findViewById(R.id.device_name);
+            deviceName.setText(currentDevice.getDeviceName());
+
+            return convertView;
+        }
+    }
+
+    public class BLEDevice { // TODO change de 2 a rien
+        private BluetoothDevice device;
+        private String deviceName;
+        private String deviceAddress;
+
+        public BLEDevice(BluetoothDevice device, String deviceName, String deviceAddress) {
+            this.device = device;
+            this.deviceName = deviceName;
+            this.deviceAddress = deviceAddress;
+        }
+
+        public BluetoothDevice getBLEdevice() {
+            return device;
+        }
+
+        public void setBLEdevice() { // TODO set au travers de tout ton code
+            this.device = device;
+        }
+
+        public String getDeviceName() {
+            return deviceName;
+        }
+
+        public void setDeviceName() { // TODO maniere de simplifier?
+            this.deviceName = device.getName();
+        }
+
+        public String getDeviceAddress() {
+            return deviceAddress;
+        }
+
+        public void setDeviceAddress() {
+            this.deviceAddress = device.getAddress();
+        }
     }
 
     @Override
@@ -114,6 +190,11 @@ public class DeviceScanActivity extends AppCompatActivity {
      */
     private void onClickToConnect(int position) {
         if (devicesDiscovered.isEmpty()) return;
+
+        if (position >= devicesDiscovered.size()) {
+            Log.w(TAG, "Illegal position.");
+            return;
+        }
 
         BluetoothDevice selectedDevice = devicesDiscovered.get(position);
         Toast.makeText(getApplicationContext(), "Selected: "
@@ -262,7 +343,7 @@ public class DeviceScanActivity extends AppCompatActivity {
             devicesDiscovered.add(result.getDevice());
             Log.d(TAG, "Added device: " + result.getDevice().getName()
                     + ", with address: " + result.getDevice().getAddress());
-            mDeviceListView.setAdapter(arrayAdapter);
+            mDeviceListView.setAdapter(mArrayAdapter);
         }
     }
 }
