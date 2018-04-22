@@ -4,7 +4,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "lauriemarceau.heart_rate_monitor_ble"
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
@@ -24,10 +24,14 @@ android {
         maven{
             url 'https://maven.google.com'
         }
+        maven {
+            url "https://jitpack.io"
+        }
     }
 }
 
 dependencies {
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
