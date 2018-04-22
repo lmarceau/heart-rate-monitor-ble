@@ -4,12 +4,12 @@ Android application that tracks data coming from a heart rate monitor following 
 
 ## Introduction
 
-This project scan surrounding LE devices, asking the user to choose which one to connect to. The battery service and the heart rate profile are used the battery level and the heart rate. The heart rate data is then plotted to show the history. At the moment, up to 120 values are shown in the heart rate history chart but this can be increased if needed :thumbsup:
+This project scan surrounding LE devices, asking the user to choose which one to connect to. It shows the name of the device and use the battery service and heart rate profile to display and update the battery level and the heart rate. The heart rate data is then plotted to show the history. At the moment, up to 120 values are shown in the heart rate history chart but this can be increased if needed :thumbsup:
 
 ### Screenshots
 Device scan activity       |      Device activity
 :-------------------------:|:-------------------------:
-<img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceScanActivity.jpg" width="200">  | <img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceActivity_RealDevice.jpg" width="200">
+<img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceScanActivity.jpg" width="200">  | <img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceActivity_RealHXDevice.jpg" width="200">
 
 ### Prerequisites
 
@@ -22,7 +22,7 @@ Device scan activity       |      Device activity
 
 ### Building the project
 
-Clone this GitHub repository and open it into Android Studio. Be sure to have the prerequisites. This project uses the Gradle build system. To build this project, use ```gradlew build``` or import a project in Android Studio. Android emulator does not have bluetooth capabilities, so please use a live device. 
+You can clone this GitHub repository and open it into Android Studio. Be sure to have the prerequisites. This project uses the Gradle build system. To build this project, use ```gradlew build``` or import a project in Android Studio. Android emulator does not have bluetooth capabilities so you have to use this app on a real device.
 
 You can use an application on another device to enable a heart rate monitor like LightBlue explorer which is available on [iOS](https://itunes.apple.com/us/app/lightblue-explorer/id557428110?mt=8) and [Android](https://play.google.com/store/apps/details?id=com.punchthrough.lightblueexplorer&hl=en). Before using the heart rate monitor application, pairing your health device through the settings screen of your phone might be necessary. If you use a virtual heart rate monitor, be careful to pair the virtual device and not your actual phone.
 
