@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public class GattAttributes extends AppCompatActivity {
 
-    private static HashMap<UUID, String> gattAttributes = new HashMap<>();
+    public static HashMap<UUID, String> gattAttributes = new HashMap<>();
 
     public static UUID HEART_RATE_SERVICE_UUID = convertFromInteger(0x180D);
     public static UUID HEART_RATE_MEASUREMENT_CHAR_UUID = convertFromInteger(0x2A37);
@@ -40,10 +40,5 @@ public class GattAttributes extends AppCompatActivity {
          gattAttributes.put(BATTERY_SERVICE_UUID, "Battery service");
          gattAttributes.put(BATTERY_LEVEL_UUID, "Battery level");
          gattAttributes.put(CLIENT_CHARACTERISTIC_CONFIG_UUID, "Client char config");
-    }
-
-    public static String findName(UUID uuid, String defaultName){
-         String name = gattAttributes.get(uuid);
-         return name == null ? defaultName : name;
     }
 }
