@@ -36,14 +36,11 @@ public class BluetoothLeService extends Service {
 
     private BluetoothGatt mGatt;
     private BluetoothAdapter mBluetoothAdapter;
-    private String mBluetoothDeviceAddress;
 
     public final static String ACTION_CONNECTED =
             "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.ACTION_GATT_CONNECTED";
     public final static String ACTION_DISCONNECTED =
             "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.ACTION_GATT_DISCONNECTED";
-    public final static String ACTION_SERVICES_DISCOVERED =
-            "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE =
             "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA_HEART_RATE =
@@ -98,25 +95,16 @@ public class BluetoothLeService extends Service {
             return false;
         }
 
-        // Previously connected device.  Try to reconnect.
-        if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
-                && mGatt != null) {
-            Log.d(TAG, "Trying to use an existing mGatt for connection.");
-            if (mGatt.connect()) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
             Log.w(TAG, "Device not found.  Unable to connect.");
             return false;
         }
-        mGatt = device.connectGatt(this, false, gattClientCallback);
-        Log.d(TAG, "Connecting to selected device");
-        mBluetoothDeviceAddress = address;
+
+        DeviceActivity.runOnUI(() -> {
+            mGatt = device.connectGatt(this, true, gattClientCallback);
+            Log.d(TAG, "Connecting to selected device");
+        });
         return true;
     }
 
@@ -125,11 +113,10 @@ public class BluetoothLeService extends Service {
      * released properly.
      */
     public void close() {
-        if (mGatt == null) {
-            return;
+        if (mGatt != null) {
+            mGatt.close();
+            mGatt = null;
         }
-        mGatt.close();
-        mGatt = null;
     }
 
     /**
@@ -144,33 +131,6 @@ public class BluetoothLeService extends Service {
     }
 
     /**
-     * Display the Gatt services and characteristics for the found device
-     * Currently used for debug purposes
-     * @param gattServices list of the found bluetooth LE gatt services for the selected device
-     */
-    public void displayGattServices(List<BluetoothGattService> gattServices) {
-        if (gattServices == null) return;
-
-        // Loops through available GATT Services.
-        for (BluetoothGattService gattService : gattServices) {
-            final String uuid = gattService.getUuid().toString();
-            Log.d(TAG, "Service discovered: " + uuid + "\n");
-
-            new ArrayList<HashMap<String, String>>();
-            List<BluetoothGattCharacteristic> gattCharacteristics =
-                    gattService.getCharacteristics();
-
-            // Loops through available Characteristics.
-            for (BluetoothGattCharacteristic gattCharacteristic :
-                    gattCharacteristics) {
-
-                final String charUuid = gattCharacteristic.getUuid().toString();
-                Log.d(TAG,"Characteristic discovered for service: " + charUuid + "\n");
-            }
-        }
-    }
-
-    /**
      * Gatt client callback: append the text view, show/hide contextual buttons
      * and discover services
      */
@@ -181,25 +141,34 @@ public class BluetoothLeService extends Service {
             super.onConnectionStateChange(gatt, status, newState);
             String intentAction;
             if (status == BluetoothGatt.GATT_FAILURE) {
-                Log.d(TAG,"Connection failure, disconnected from server");
-                disconnectGattServer();
+                DeviceActivity.runOnUI(() -> {
+                    Log.d(TAG, "Connection failure, disconnected from server");
+                    disconnectGattServer();
+                });
                 return;
             } else if (status != BluetoothGatt.GATT_SUCCESS) {
-                Log.d(TAG,"Connection failure, disconnected from server");
-                disconnectGattServer();
+                DeviceActivity.runOnUI(() -> {
+                    Log.d(TAG, "Connection failure, disconnected from server");
+                    disconnectGattServer();
+                });
                 return;
             }
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 intentAction = ACTION_CONNECTED;
                 broadcastUpdate(intentAction);
-                Log.d(TAG,"Success: connecting to gatt and discovering services");
-                gatt.discoverServices();
+                DeviceActivity.runOnUI(() -> {
+                    Log.d(TAG, "Success: connecting to gatt and discovering services");
+                    Log.i(TAG, "Attempting to start service discovery: " +
+                            gatt.discoverServices());
+                });
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 intentAction = ACTION_DISCONNECTED;
-                Log.d(TAG,"Connection failure, disconnected from server");
                 broadcastUpdate(intentAction);
-                disconnectGattServer();
+                DeviceActivity.runOnUI(() -> {
+                    Log.d(TAG, "Connection failure, disconnected from server");
+                    disconnectGattServer();
+                });
             }
         }
 
@@ -211,10 +180,7 @@ public class BluetoothLeService extends Service {
                 Log.e(TAG, "Device service discovery unsuccessful, status " + status);
                 return;
             }
-            else {
-                broadcastUpdate(ACTION_SERVICES_DISCOVERED);
-            }
-
+            gatt.getServices();
             setHeartRateNotification(gatt, true);
         }
 
@@ -271,8 +237,7 @@ public class BluetoothLeService extends Service {
 
     /**
      * Notify DeviceActivity of key events happening in BluetoothLeService
-     * @param action ACTION_CONNECTED, ACTION_DISCONNECTED, ACTION_DATA_AVAILABLE or
-     *               ACTION_SERVICES_DISCOVERED
+     * @param action ACTION_CONNECTED, ACTION_DISCONNECTED, ACTION_DATA_AVAILABLE
      */
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
@@ -281,8 +246,7 @@ public class BluetoothLeService extends Service {
 
     /**
      * Notify DeviceActivity of key events happening in BluetoothLeService
-     * @param action ACTION_CONNECTED, ACTION_DISCONNECTED, ACTION_DATA_AVAILABLE or
-     *               ACTION_SERVICES_DISCOVERED
+     * @param action ACTION_CONNECTED, ACTION_DISCONNECTED, ACTION_DATA_AVAILABLE
      * @param characteristic {@link BluetoothGattCharacteristic}
      */
     private void broadcastUpdate(final String action,
@@ -334,13 +298,5 @@ public class BluetoothLeService extends Service {
         }
         Log.v(TAG, "batteryLevel = " + mGatt.readCharacteristic(batteryLevel));
         mGatt.readCharacteristic(batteryLevel);
-    }
-
-    /**
-     * Get services from the device and call the display method useful for debug purposes
-     */
-    public void getSupportedGattServices() {
-        if (mGatt == null) return;
-        displayGattServices(mGatt.getServices());
     }
 }
