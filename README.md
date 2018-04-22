@@ -9,7 +9,7 @@ This project scan surrounding LE devices, asking the user to choose which one to
 ### Screenshots
 Device scan activity       |      Device activity
 :-------------------------:|:-------------------------:
-<img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceScanActivity.jpg" width="200">  | <img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceActivity_RealDevice.jpg.jpg" width="200">
+<img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceScanActivity.jpg" width="200">  | <img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceActivity_RealDevice.jpg" width="200">
 
 ### Prerequisites
 
@@ -24,7 +24,7 @@ Device scan activity       |      Device activity
 
 Clone this GitHub repository and open it into Android Studio. Be sure to have the prerequisites. This project uses the Gradle build system. To build this project, use ```gradlew build``` or import a project in Android Studio. Android emulator does not have bluetooth capabilities, so please use a live device. 
 
-You can use an application on another device to enable a heart rate monitor like LightBlue explorer which is available on [iOS](https://itunes.apple.com/us/app/lightblue-explorer/id557428110?mt=8) and [Android](https://play.google.com/store/apps/details?id=com.punchthrough.lightblueexplorer&hl=en). Before using your heart rate monitor (a real one or a simulator) please ensure the device is paired through the settings screen of your phone. If you use a virtual heart rate monitor, be careful to pair the virtual device and not your actual phone.
+You can use an application on another device to enable a heart rate monitor like LightBlue explorer which is available on [iOS](https://itunes.apple.com/us/app/lightblue-explorer/id557428110?mt=8) and [Android](https://play.google.com/store/apps/details?id=com.punchthrough.lightblueexplorer&hl=en). Before using the heart rate monitor application, pairing your health device through the settings screen of your phone might be necessary. If you use a virtual heart rate monitor, be careful to pair the virtual device and not your actual phone.
 
 ## Project was based on
 * [Android BluetoothLeGatt Google sample](https://github.com/googlesamples/android-BluetoothLeGatt)
