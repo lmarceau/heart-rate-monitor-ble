@@ -4,9 +4,12 @@ Android application that tracks data coming from a heart rate monitor following 
 
 ## Introduction
 
-This project scan surrounding LE devices, asking the user to choose which one to connect to. The battery service and the heart rate profile are used the battery level and the heart rate. The heart rate data is then plotted to show the history.
+This project scan surrounding LE devices, asking the user to choose which one to connect to. The battery service and the heart rate profile are used the battery level and the heart rate. The heart rate data is then plotted to show the history. At the moment, up to 120 values are shown in the heart rate history chart but this can be increased if needed :thumbsup:.
 
 ### Screenshots
+Device scan activity       |      Device activity
+:-------------------------:|:-------------------------:
+<img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceScanAcitivty.jpg" width="200">  | <img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceActivity.jpg" width="200">
 
 ### Prerequisites
 
@@ -15,6 +18,7 @@ This project scan surrounding LE devices, asking the user to choose which one to
 * Android Support Repository
 * Grade 3.1.1
 * Java version 1.8
+* [MPAndroidChart 3.0.3](https://github.com/PhilJay/MPAndroidChart)
 * JUnit 4.12
 
 ### Building the project
@@ -28,3 +32,4 @@ You can use an application on another device to enable a heart rate monitor like
 ## Project was based on
 * [Android BluetoothLeGatt Google sample](https://github.com/googlesamples/android-BluetoothLeGatt)
 * [The android usage examples](https://developer.android.com/guide/topics/connectivity/bluetooth-le.html)
+* [MPAndroidChart Realtime LineChart example](https://github.com/PhilJay/MPAndroidChart/blob/master/MPChartExample/src/com/xxmassdeveloper/mpchartexample/RealtimeLineChartActivity.java)
