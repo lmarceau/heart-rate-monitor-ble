@@ -9,7 +9,7 @@ This project scan surrounding LE devices, asking the user to choose which one to
 ### Screenshots
 Device scan activity       |      Device activity
 :-------------------------:|:-------------------------:
-<img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceScanAcitivty.jpg" width="200">  | <img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceActivity.jpg" width="200">
+<img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceScanActivity.jpg" width="200">  | <img src="https://github.com/LaurieMarceau/Heart-rate-monitor-BLE/blob/master/screenshots/Screenshot_DeviceActivity_RealDevice.jpg.jpg" width="200">
 
 ### Prerequisites
 
