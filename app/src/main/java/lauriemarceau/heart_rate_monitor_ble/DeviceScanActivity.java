@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.content.pm.PackageManager;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -42,6 +43,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     private final static int REQUEST_COARSE_LOCATION = 1;
 
     private static final String TAG = DeviceScanActivity.class.getSimpleName();
+    private static final int SCAN_PERIOD = 5000; // 5 seconds scan period
 
     private ArrayBLEAdapter mArrayAdapter;
     private BluetoothAdapter mBluetoothAdapter;
@@ -94,6 +96,7 @@ public class DeviceScanActivity extends AppCompatActivity {
         super.onPause();
         stopScan();
         devicesDiscovered.clear();
+        mDeviceListView.setAdapter(mArrayAdapter);
     }
 
     @Override
@@ -126,9 +129,18 @@ public class DeviceScanActivity extends AppCompatActivity {
             return;
         }
 
+        // Ensure closing scanning before going to next activity
+        if (mScanning) {
+            mBluetoothLeScanner.flushPendingScanResults(mScanCallback);
+            mBluetoothLeScanner.stopScan(mScanCallback);
+            mScanning = false;
+            SystemClock.sleep(500);
+        }
+
         BluetoothDevice selectedDevice = devicesDiscovered.get(position);
-        Toast.makeText(getApplicationContext(), "Selected: "
-                        + selectedDevice.getName(), Toast.LENGTH_LONG).show();
+        DeviceScanActivity.this.runOnUiThread(() ->
+                Toast.makeText(getApplicationContext(), "Selected: "
+                        + selectedDevice.getName(), Toast.LENGTH_LONG).show());
 
         Log.d(TAG, "Connecting to device " + selectedDevice.getName());
 
@@ -145,8 +157,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         if (!hasPermissions() || mScanning) return;
 
         devicesDiscovered.clear();
-
-        int SCAN_PERIOD = 5000; // 5 seconds scan period
 
         mScanCallback = new BleScanCallback(devicesDiscovered);
 

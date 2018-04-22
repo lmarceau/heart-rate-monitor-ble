@@ -8,9 +8,14 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -56,6 +61,29 @@ public class DeviceActivity extends AppCompatActivity {
 
         Intent bleServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(bleServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_disconnect, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.disconnect:
+                Log.d(TAG,"Going back to scanning");
+                mBluetoothLeService.disconnectGattServer();
+                final Intent intent = new Intent(this, DeviceScanActivity.class);
+                startActivity(intent);
+                finish();
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
@@ -127,12 +155,6 @@ public class DeviceActivity extends AppCompatActivity {
                 updateConnectionState(R.string.connection_failure);
                 ClearTextViews();
 
-            } else if (BluetoothLeService.
-                    ACTION_SERVICES_DISCOVERED.equals(action)) {
-                // Show all the supported services and characteristics in the log debug
-                Log.d(TAG,"Displaying the device services");
-                mBluetoothLeService.getSupportedGattServices();
-
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
                 Log.d(TAG,"ACTION_DATA_AVAILABLE");
                 mBluetoothLeService.getBattery();
@@ -146,13 +168,12 @@ public class DeviceActivity extends AppCompatActivity {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BluetoothLeService.ACTION_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         return intentFilter;
     }
 
     private void updateConnectionState(final int resourceId) {
-        runOnUiThread(() ->  Log.d(TAG, "New connection state is: " + resourceId));
+        Log.d(TAG, "New connection state is: " + resourceId);
     }
 
     private void displayHeartRateData(String data) {
@@ -245,5 +266,15 @@ public class DeviceActivity extends AppCompatActivity {
         set.setValueTextSize(9f);
         set.setDrawValues(false);
         return set;
+    }
+
+    public static Handler UIHandler;
+
+    static
+    {
+        UIHandler = new Handler(Looper.getMainLooper());
+    }
+    public static void runOnUI(Runnable runnable) {
+        UIHandler.post(runnable);
     }
 }

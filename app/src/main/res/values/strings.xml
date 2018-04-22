@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Heart rate monitor</string>
     <string name="scan_button">Scan</string>
+    <string name="disconnect_button">Disconnect</string>
     <string name="no_data">xx</string>
     <string name="no_battery_level">-- %</string>
     <string name="battery_icon">battery icon</string>
