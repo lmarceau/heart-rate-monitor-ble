@@ -6,11 +6,21 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
+
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
 public class DeviceActivity extends AppCompatActivity {
 
@@ -22,8 +32,10 @@ public class DeviceActivity extends AppCompatActivity {
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
 
-    public TextView batteryLevelValue;
-    public TextView heartRateValue;
+    public TextView batteryLevelTextView;
+    public TextView heartRateTextView;
+    public LineChart heartRateChart;
+    public int actualHeartRateValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,12 +45,14 @@ public class DeviceActivity extends AppCompatActivity {
         final Intent intent = getIntent();
         String mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
-        Log.d(TAG, "Device address: " + mDeviceAddress + ", device name: " + mDeviceName);
+        Log.d(TAG, "Device address: " + mDeviceAddress);
 
         this.setTitle(mDeviceName);
 
-        batteryLevelValue = findViewById(R.id.batteryLevelValue);
-        heartRateValue = findViewById(R.id.heartRateValueText);
+        batteryLevelTextView = findViewById(R.id.batteryLevelValue);
+        heartRateTextView = findViewById(R.id.heartRateValueText);
+        heartRateChart = findViewById(R.id.heartRateChart);
+        setHeartRateChart();
 
         Intent bleServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(bleServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
@@ -68,8 +82,8 @@ public class DeviceActivity extends AppCompatActivity {
     }
 
     private void ClearTextViews() {
-        batteryLevelValue.setText(R.string.no_battery_level);
-        heartRateValue.setText(R.string.no_data);
+        batteryLevelTextView.setText(R.string.no_battery_level);
+        heartRateTextView.setText(R.string.no_data);
     }
 
     /**
@@ -84,20 +98,19 @@ public class DeviceActivity extends AppCompatActivity {
                 Log.e(TAG, "Failure to start bluetooth");
                 finish();
             }
+            // Automatically connects to the device upon successful start-up initialization.
             mBluetoothLeService.connectToDevice(mDeviceAddress);
-            Log.d(TAG, "Service is now connected to the device: " + mDeviceAddress);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName){
-            Log.d(TAG, "Service is now disconnected");
             mBluetoothLeService = null;
         }
     };
 
     /**
     * Handles various events fired by the Service: ACTION_GATT_CONNECTED, ACTION_GATT_DISCONNECTED,
-    * ACTION_GATT_SERVICES_DISCOVERED or ACTION_DATA_AVAILABLE. This can be a
+    * ACTION_GATT_SERVICES_DISCOVERED ACTION_DATA_AVAILABLE. This can be a
     * result of read or notification operations.
     */
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
@@ -145,13 +158,92 @@ public class DeviceActivity extends AppCompatActivity {
     private void displayHeartRateData(String data) {
         if (data != null) {
             Log.d(TAG, "Heart rate received: " + data);
-            heartRateValue.setText(data);
+            heartRateTextView.setText(data);
+            actualHeartRateValue = Integer.parseInt(data);
+            addHeartRateEntry();
         }
     }
     private void displayBatteryData(String data) {
         if (data != null) {
             Log.d(TAG, "Battery level received: " + data);
-            batteryLevelValue.setText(getString(R.string.battery_value, String.valueOf(data)));
+            batteryLevelTextView.setText(getString(R.string.battery_value, String.valueOf(data)));
         }
+    }
+
+    /**
+     * Set all parameters relative to the heart rate chart
+     */
+    public void setHeartRateChart() {
+
+        heartRateChart.getDescription().setEnabled(true);
+        heartRateChart.setDrawGridBackground(false);
+        heartRateChart.setBackgroundColor(Color.TRANSPARENT);
+
+        LineData heartRateData = new LineData();
+        heartRateChart.setData(heartRateData);
+        heartRateChart.setMinimumHeight(350);
+
+        XAxis xAxis = heartRateChart.getXAxis();
+        xAxis.setTextColor(Color.WHITE);
+        xAxis.setDrawGridLines(false);
+        xAxis.setAvoidFirstLastClipping(true);
+        xAxis.setEnabled(true);
+
+        YAxis yAxis = heartRateChart.getAxisLeft();
+        yAxis.setTextColor(Color.WHITE);
+        yAxis.setAxisMaximum(140f);
+        yAxis.setAxisMinimum(50f);
+        yAxis.setDrawGridLines(true);
+
+        Legend legend = heartRateChart.getLegend();
+        legend.setEnabled(false);
+
+        YAxis rightAxis = heartRateChart.getAxisRight();
+        rightAxis.setEnabled(false);
+    }
+
+    /**
+    * Every time a new heart rate value is received, it is added to the real time chart
+    **/
+    private void addHeartRateEntry() {
+
+        LineData data = heartRateChart.getData();
+
+        if (data != null) {
+
+            ILineDataSet set = data.getDataSetByIndex(0);
+
+            if (set == null) {
+                set = createSet();
+                data.addDataSet(set);
+            }
+
+            data.addEntry(new Entry(set.getEntryCount(), actualHeartRateValue), 0);
+            data.notifyDataChanged();
+
+            heartRateChart.notifyDataSetChanged();
+            heartRateChart.setVisibleXRangeMaximum(120);
+            heartRateChart.moveViewToX(data.getEntryCount());
+        }
+    }
+
+    /**
+     * Set the parameters for the LineDataSet
+     * @return a {@link LineDataSet} for the heart rate chart
+     */
+    private LineDataSet createSet() {
+        LineDataSet set = new LineDataSet(null, "Heart Rate Data");
+        set.setAxisDependency(YAxis.AxisDependency.LEFT);
+        set.setColor(Color.RED);
+        set.setCircleColor(Color.RED);
+        set.setLineWidth(2f);
+        set.setCircleRadius(1f);
+        set.setFillAlpha(65);
+        set.setFillColor(Color.RED);
+        set.setHighLightColor(Color.RED);
+        set.setValueTextColor(Color.RED);
+        set.setValueTextSize(9f);
+        set.setDrawValues(false);
+        return set;
     }
 }
