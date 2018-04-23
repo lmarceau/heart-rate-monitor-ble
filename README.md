@@ -26,6 +26,14 @@ You can clone this GitHub repository and open it into Android Studio. Be sure to
 
 You can use an application on another device to enable a heart rate monitor like LightBlue explorer which is available on [iOS](https://itunes.apple.com/us/app/lightblue-explorer/id557428110?mt=8) and [Android](https://play.google.com/store/apps/details?id=com.punchthrough.lightblueexplorer&hl=en). Before using the heart rate monitor application, pairing your health device through the settings screen of your phone might be necessary. If you use a virtual heart rate monitor, be careful to pair the virtual device and not your actual phone.
 
+## Tests
+
+The application was tested with local and instrumented tests launched from Android Studio with Ctrl+Shift+F10. UI/Application Exerciser Monkey was also used to test the UI with 
+
+```adb shell monkey -p lauriemarceau.heart_rate_monitor_ble -v 500```
+
+This command sent pseudo-random events to the application. Firebase Test Lab for Android Robo Test was also used to test the application on different devices and assure intercompatibility. 
+
 ## Project was based on
 * [Android BluetoothLeGatt Google sample](https://github.com/googlesamples/android-BluetoothLeGatt)
 * [The Android usage examples](https://developer.android.com/guide/topics/connectivity/bluetooth-le.html)
