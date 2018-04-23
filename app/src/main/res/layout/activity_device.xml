@@ -8,7 +8,6 @@
     android:background="@drawable/heart_background"
     android:orientation="vertical">
 
-
     <ImageView
         android:id="@+id/batteryIcon"
         android:layout_width="30dp"

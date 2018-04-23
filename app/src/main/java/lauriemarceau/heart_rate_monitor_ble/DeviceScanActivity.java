@@ -41,9 +41,8 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_COARSE_LOCATION = 1;
-
     private static final String TAG = DeviceScanActivity.class.getSimpleName();
-    private static final int SCAN_PERIOD = 5000; // 5 seconds scan period
+    private static final int SCAN_PERIOD = 5000; /* 5 seconds scan period */
 
     private ArrayBLEAdapter mArrayAdapter;
     private BluetoothAdapter mBluetoothAdapter;
@@ -61,30 +60,25 @@ public class DeviceScanActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scan_device);
 
-        progressBar = findViewById(R.id.progress_bar);
-
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         if (bluetoothManager != null) {
             mBluetoothAdapter = bluetoothManager.getAdapter();
         }
-
         if (!checkBluetoothSupport(mBluetoothAdapter)) {
             finish();
         }
-
+        progressBar = findViewById(R.id.progress_bar);
         mDeviceListView = findViewById(R.id.device_list);
         mArrayAdapter = new ArrayBLEAdapter(this, devicesDiscovered);
         mDeviceListView.setAdapter(mArrayAdapter);
 
         mDeviceListView.setOnItemClickListener((parent, view, position, id)
                 -> onClickToConnect(position));
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Log.v(TAG, "No LE Support.");
             finish();
@@ -112,6 +106,7 @@ public class DeviceScanActivity extends AppCompatActivity {
             case R.id.scan:
                 startScan();
                 return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -129,15 +124,16 @@ public class DeviceScanActivity extends AppCompatActivity {
             return;
         }
 
-        // Ensure closing scanning before going to next activity
+        /* Ensure closing scanning before going to next activity */
         if (mScanning) {
+            mScanning = false;
+
             mBluetoothLeScanner.flushPendingScanResults(mScanCallback);
             mBluetoothLeScanner.stopScan(mScanCallback);
-            mScanning = false;
             SystemClock.sleep(500);
         }
-
         BluetoothDevice selectedDevice = devicesDiscovered.get(position);
+
         DeviceScanActivity.this.runOnUiThread(() ->
                 Toast.makeText(getApplicationContext(), "Selected: "
                         + selectedDevice.getName(), Toast.LENGTH_LONG).show());
@@ -164,7 +160,7 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         List<ScanFilter> filters = new ArrayList<>();
 
-        // Only scan for BLE devices
+        /* Only scan for BLE devices */
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
                 .build();
@@ -186,7 +182,6 @@ public class DeviceScanActivity extends AppCompatActivity {
             mBluetoothLeScanner.stopScan(mScanCallback);
             scanComplete();
         }
-
         mScanCallback = null;
         mScanning = false;
         mHandler = null;
@@ -208,17 +203,14 @@ public class DeviceScanActivity extends AppCompatActivity {
      * @return true if Bluetooth is properly supported, false otherwise
      */
     private boolean checkBluetoothSupport(BluetoothAdapter bluetoothAdapter) {
-
         if (bluetoothAdapter == null) {
             Log.w(TAG, "Bluetooth is not supported");
             return false;
         }
-
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Log.w(TAG, "Bluetooth LE is not supported");
             return false;
         }
-
         return true;
     }
 
@@ -255,7 +247,6 @@ public class DeviceScanActivity extends AppCompatActivity {
      *  Extends the ScanCallback class to add results in the Arraylist
      */
     private class BleScanCallback extends ScanCallback {
-
             private ArrayList<BluetoothDevice> devicesDiscovered;
 
             BleScanCallback(ArrayList<BluetoothDevice> scanResults) {
@@ -270,7 +261,7 @@ public class DeviceScanActivity extends AppCompatActivity {
                 return;
             }
 
-            // This would be better with a HashMap
+            /* This would be better with a HashMap */
             if (!devicesDiscovered.contains(result.getDevice())) {
                 addLeScanResult(result);
             }
@@ -293,7 +284,6 @@ public class DeviceScanActivity extends AppCompatActivity {
      * Custom adapter for the {@link ListView}
      */
     private class ArrayBLEAdapter extends ArrayAdapter<BluetoothDevice> {
-
         private Context mContext;
         private List<BluetoothDevice> devices;
 
@@ -306,7 +296,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         @NonNull
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-
             if (convertView == null)
                 convertView = LayoutInflater.from(mContext).inflate(R.layout.device_list,
                         parent,false);
@@ -315,15 +304,13 @@ public class DeviceScanActivity extends AppCompatActivity {
 
             TextView deviceAddress = convertView.findViewById(R.id.device_address);
             deviceAddress.setText(currentDevice.getAddress());
-
             TextView deviceName = convertView.findViewById(R.id.device_name);
+
             if (currentDevice.getName() != null) {
                 deviceName.setText(currentDevice.getName());
-            }
-            else {
+            } else {
                 deviceName.setText(R.string.no_name);
             }
-
             return convertView;
         }
     }

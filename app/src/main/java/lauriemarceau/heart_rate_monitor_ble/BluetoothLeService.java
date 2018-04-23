@@ -15,10 +15,6 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.BATTERY_LEVEL_UUID;
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.BATTERY_SERVICE_UUID;
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.CLIENT_CHARACTERISTIC_CONFIG_UUID;
@@ -27,26 +23,27 @@ import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.HEART_RATE_MEA
 import static lauriemarceau.heart_rate_monitor_ble.GattAttributes.HEART_RATE_SERVICE_UUID;
 
 /**
- * BluetoothLeService
+ * BluetoothLeService, everything related to BLE is handled here
  * Extends service : Android application component without a UI that runs on the main thread
  */
 public class BluetoothLeService extends Service {
 
+    public final static String ACTION_CONNECTED =
+            "lauriemarceau.heart_rate_monitor_ble.ACTION_GATT_CONNECTED";
+    public final static String ACTION_DISCONNECTED =
+            "lauriemarceau.heart_rate_monitor_ble.ACTION_GATT_DISCONNECTED";
+    public final static String ACTION_DATA_AVAILABLE =
+            "lauriemarceau.heart_rate_monitor_ble.ACTION_DATA_AVAILABLE";
+    public final static String EXTRA_DATA_HEART_RATE =
+            "lauriemarceau.heart_rate_monitor_ble.EXTRA_DATA_HEART_RATE";
+    public final static String EXTRA_DATA_BATTERY =
+            "lauriemarceau.heart_rate_monitor_ble.EXTRA_DATA_BATTERY";
+
     private final static String TAG = BluetoothLeService.class.getSimpleName();
+    private final IBinder mBinder = new LocalBinder();
 
     private BluetoothGatt mGatt;
     private BluetoothAdapter mBluetoothAdapter;
-
-    public final static String ACTION_CONNECTED =
-            "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.ACTION_GATT_CONNECTED";
-    public final static String ACTION_DISCONNECTED =
-            "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.ACTION_GATT_DISCONNECTED";
-    public final static String ACTION_DATA_AVAILABLE =
-            "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA_HEART_RATE =
-            "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.EXTRA_DATA_HEART_RATE";
-    public final static String EXTRA_DATA_BATTERY =
-            "lauriemarceau.heart_rate_monitor_ble.bluetooth.le.EXTRA_DATA_BATTERY";
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -65,19 +62,17 @@ public class BluetoothLeService extends Service {
         }
     }
 
-    private final IBinder mBinder = new LocalBinder();
-
     /**
      * Initialize the bluetoothAdapter {@link BluetoothAdapter}
      * @return false when bluetooth initialization wasn't successful, true otherwise
      */
     public boolean initBluetooth() {
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+
         if (bluetoothManager != null) {
             mBluetoothAdapter = bluetoothManager.getAdapter();
             return true;
-        }
-        else {
+        } else {
             Log.e(TAG, "Bluetooth adapter init didn't work");
             return false;
         }
@@ -89,13 +84,12 @@ public class BluetoothLeService extends Service {
      * @return true if the connection was successful, false otherwise
      */
     public boolean connectToDevice(final String address) {
-
         if (mBluetoothAdapter == null || address == null) {
             Log.w(TAG, "No Bluetooth adapter or no address");
             return false;
         }
-
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+
         if (device == null) {
             Log.w(TAG, "Device not found.  Unable to connect.");
             return false;
@@ -140,6 +134,7 @@ public class BluetoothLeService extends Service {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
             String intentAction;
+
             if (status == BluetoothGatt.GATT_FAILURE) {
                 DeviceActivity.runOnUI(() -> {
                     Log.d(TAG, "Connection failure, disconnected from server");
@@ -155,15 +150,16 @@ public class BluetoothLeService extends Service {
             }
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 intentAction = ACTION_CONNECTED;
+
                 broadcastUpdate(intentAction);
                 DeviceActivity.runOnUI(() -> {
                     Log.d(TAG, "Success: connecting to gatt and discovering services");
                     Log.i(TAG, "Attempting to start service discovery: " +
                             gatt.discoverServices());
                 });
-
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 intentAction = ACTION_DISCONNECTED;
+
                 broadcastUpdate(intentAction);
                 DeviceActivity.runOnUI(() -> {
                     Log.d(TAG, "Connection failure, disconnected from server");
@@ -175,7 +171,6 @@ public class BluetoothLeService extends Service {
         @Override
         public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
             super.onServicesDiscovered(gatt, status);
-
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 Log.e(TAG, "Device service discovery unsuccessful, status " + status);
                 return;
@@ -187,11 +182,11 @@ public class BluetoothLeService extends Service {
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor,
                                       int status){
-
             BluetoothGattCharacteristic characteristic =
                     gatt.getService(HEART_RATE_SERVICE_UUID)
                             .getCharacteristic(HEART_RATE_CONTROL_POINT_CHAR_UUID);
 
+            /* Write to Heart Rate Control Point Characteristic to get data streaming */
             characteristic.setValue(new byte[]{1, 1});
             gatt.writeCharacteristic(characteristic);
         }
@@ -224,6 +219,7 @@ public class BluetoothLeService extends Service {
                 gatt.getService(HEART_RATE_SERVICE_UUID)
                         .getCharacteristic(HEART_RATE_MEASUREMENT_CHAR_UUID);
 
+        /* Enable notification  on the heart rate measurement characteristic */
         gatt.setCharacteristicNotification(characteristic, enabled);
 
         BluetoothGattDescriptor descriptor =
@@ -253,10 +249,11 @@ public class BluetoothLeService extends Service {
                                  final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
 
-        // Following heart rate profile specification
+        /* Following heart rate profile specification */
         if (HEART_RATE_MEASUREMENT_CHAR_UUID.equals(characteristic.getUuid())) {
             int flag = characteristic.getProperties();
             int format = -1;
+
             if ((flag & 0x01) != 0) {
                 format = BluetoothGattCharacteristic.FORMAT_UINT16;
                 Log.d(TAG, "Heart rate format UINT16.");
@@ -268,10 +265,11 @@ public class BluetoothLeService extends Service {
             Log.d(TAG, String.format("Received heart rate: %d", heartRate));
             intent.putExtra(EXTRA_DATA_HEART_RATE, String.valueOf(heartRate));
 
-        // Get the info from the battery level
+        /* Get the battery level */
         } else if (BATTERY_LEVEL_UUID.equals((characteristic.getUuid()))){
             final int batteryLevel = characteristic.getIntValue
                     (BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+
             if (batteryLevel != 0) {
                 Log.d(TAG, String.format("Received battery level: %d", batteryLevel));
                 intent.putExtra(EXTRA_DATA_BATTERY, String.valueOf(batteryLevel));
@@ -285,13 +283,14 @@ public class BluetoothLeService extends Service {
      */
     public void getBattery() {
         BluetoothGattService batteryService = mGatt.getService(BATTERY_SERVICE_UUID);
-        if(batteryService == null) {
+
+        if (batteryService == null) {
             Log.d(TAG, "Battery service not found!");
             return;
         }
-
         BluetoothGattCharacteristic batteryLevel =
                 batteryService.getCharacteristic(BATTERY_LEVEL_UUID);
+
         if (batteryLevel == null) {
             Log.d(TAG, "Battery level not found!");
             return;
