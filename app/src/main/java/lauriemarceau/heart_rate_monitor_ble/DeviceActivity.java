@@ -27,6 +27,10 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
+/**
+ * Activity  that connects to the BluetoothLeService, handles the UI activity which
+ * include the battery service, the device name and the heart rate with its history chart
+ */
 public class DeviceActivity extends AppCompatActivity {
 
     private final static String TAG = DeviceActivity.class.getSimpleName();
@@ -50,9 +54,9 @@ public class DeviceActivity extends AppCompatActivity {
         final Intent intent = getIntent();
         String mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
-        Log.d(TAG, "Device address: " + mDeviceAddress);
 
         this.setTitle(mDeviceName);
+        Log.d(TAG, "Device address: " + mDeviceAddress);
 
         batteryLevelTextView = findViewById(R.id.batteryLevelValue);
         heartRateTextView = findViewById(R.id.heartRateValueText);
@@ -61,8 +65,6 @@ public class DeviceActivity extends AppCompatActivity {
 
         Intent bleServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(bleServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-
-
     }
 
     @Override
@@ -76,11 +78,13 @@ public class DeviceActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.disconnect:
-                Log.d(TAG,"Going back to scanning");
-                mBluetoothLeService.disconnectGattServer();
                 final Intent intent = new Intent(this, DeviceScanActivity.class);
+
+                mBluetoothLeService.disconnectGattServer();
                 startActivity(intent);
+                Log.d(TAG,"Going back to scanning activity");
                 finish();
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -90,6 +94,7 @@ public class DeviceActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         registerReceiver(mGattUpdateReceiver, makeUpdateIntentFilter());
+
         if (mBluetoothLeService != null) {
             final boolean result = mBluetoothLeService.connectToDevice(mDeviceAddress);
             Log.d(TAG, "The connection was = " + result);
@@ -122,11 +127,13 @@ public class DeviceActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service){
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
+
             if (!mBluetoothLeService.initBluetooth()) {
                 Log.e(TAG, "Failure to start bluetooth");
                 finish();
             }
-            // Automatically connects to the device upon successful start-up initialization.
+
+            /* Automatically connects to the device upon successful start-up initialization. */
             mBluetoothLeService.connectToDevice(mDeviceAddress);
         }
 
@@ -142,6 +149,7 @@ public class DeviceActivity extends AppCompatActivity {
     * result of read or notification operations.
     */
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
@@ -166,6 +174,7 @@ public class DeviceActivity extends AppCompatActivity {
 
     private static IntentFilter makeUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
+
         intentFilter.addAction(BluetoothLeService.ACTION_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_DISCONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
@@ -195,7 +204,6 @@ public class DeviceActivity extends AppCompatActivity {
      * Set all parameters relative to the heart rate chart
      */
     public void setHeartRateChart() {
-
         heartRateChart.getDescription().setEnabled(true);
         heartRateChart.setDrawGridBackground(false);
         heartRateChart.setBackgroundColor(Color.TRANSPARENT);
@@ -227,18 +235,15 @@ public class DeviceActivity extends AppCompatActivity {
     * Every time a new heart rate value is received, it is added to the real time chart
     **/
     private void addHeartRateEntry() {
-
         LineData data = heartRateChart.getData();
 
         if (data != null) {
-
             ILineDataSet set = data.getDataSetByIndex(0);
 
             if (set == null) {
                 set = createSet();
                 data.addDataSet(set);
             }
-
             data.addEntry(new Entry(set.getEntryCount(), actualHeartRateValue), 0);
             data.notifyDataChanged();
 
@@ -254,6 +259,7 @@ public class DeviceActivity extends AppCompatActivity {
      */
     private LineDataSet createSet() {
         LineDataSet set = new LineDataSet(null, "Heart Rate Data");
+
         set.setAxisDependency(YAxis.AxisDependency.LEFT);
         set.setColor(Color.RED);
         set.setCircleColor(Color.RED);
@@ -270,10 +276,10 @@ public class DeviceActivity extends AppCompatActivity {
 
     public static Handler UIHandler;
 
-    static
-    {
+    static {
         UIHandler = new Handler(Looper.getMainLooper());
     }
+
     public static void runOnUI(Runnable runnable) {
         UIHandler.post(runnable);
     }
