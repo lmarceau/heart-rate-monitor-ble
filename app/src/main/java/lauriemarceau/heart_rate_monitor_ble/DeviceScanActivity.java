@@ -260,7 +260,6 @@ public class DeviceScanActivity extends AppCompatActivity {
                 addLeScanResult(result);
                 return;
             }
-
             /* This would be better with a HashMap */
             if (!devicesDiscovered.contains(result.getDevice())) {
                 addLeScanResult(result);
