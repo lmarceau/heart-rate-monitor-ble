@@ -32,6 +32,8 @@ public class BluetoothLeService extends Service {
             "lauriemarceau.heart_rate_monitor_ble.ACTION_GATT_CONNECTED";
     public final static String ACTION_DISCONNECTED =
             "lauriemarceau.heart_rate_monitor_ble.ACTION_GATT_DISCONNECTED";
+    public final static String ACTION_STATE_CLOSED =
+            "lauriemarceau.heart_rate_monitor_ble.ACTION_STATE_CLOSED";
     public final static String ACTION_DATA_AVAILABLE =
             "lauriemarceau.heart_rate_monitor_ble.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA_HEART_RATE =
@@ -111,6 +113,7 @@ public class BluetoothLeService extends Service {
             mGatt.close();
             mGatt = null;
         }
+        broadcastUpdate(ACTION_STATE_CLOSED);
     }
 
     /**
@@ -120,8 +123,8 @@ public class BluetoothLeService extends Service {
     public void disconnectGattServer() {
         if (mGatt != null) {
             mGatt.disconnect();
-            mGatt.close();
         }
+        broadcastUpdate(ACTION_DISCONNECTED);
     }
 
     /**
@@ -282,6 +285,8 @@ public class BluetoothLeService extends Service {
      * Get the battery level from the battery service of the heart rate monitor
      */
     public void getBattery() {
+        if (mGatt == null) return;
+
         BluetoothGattService batteryService = mGatt.getService(BATTERY_SERVICE_UUID);
 
         if (batteryService == null) {

@@ -37,6 +37,7 @@ public class DeviceActivity extends AppCompatActivity {
 
     private BluetoothLeService mBluetoothLeService;
     private String mDeviceAddress;
+    private String mConnectionStatus;
 
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
@@ -80,10 +81,12 @@ public class DeviceActivity extends AppCompatActivity {
             case R.id.disconnect:
                 final Intent intent = new Intent(this, DeviceScanActivity.class);
 
-                mBluetoothLeService.disconnectGattServer();
-                startActivity(intent);
-                Log.d(TAG,"Going back to scanning activity");
-                finish();
+                mBluetoothLeService.close();
+                if (BluetoothLeService.ACTION_CONNECTED.equals(mConnectionStatus)) {
+                    startActivity(intent);
+                    Log.d(TAG,"Going back to scanning activity");
+                    finish();
+                }
 
             default:
                 return super.onOptionsItemSelected(item);
@@ -155,19 +158,20 @@ public class DeviceActivity extends AppCompatActivity {
             final String action = intent.getAction();
 
             if (BluetoothLeService.ACTION_CONNECTED.equals(action)) {
-                Log.d(TAG,"ACTION_CONNECTED");
-                updateConnectionState(R.string.connection_success);
+                updateConnectionState("ACTION_CONNECTED");
 
             } else if (BluetoothLeService.ACTION_DISCONNECTED.equals(action)) {
-                Log.d(TAG,"ACTION_DISCONNECTED");
-                updateConnectionState(R.string.connection_failure);
+                updateConnectionState("ACTION_DISCONNECTED");
                 ClearTextViews();
 
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                Log.d(TAG,"ACTION_DATA_AVAILABLE");
+                updateConnectionState("ACTION_DATA_AVAILABLE");
                 mBluetoothLeService.getBattery();
                 displayHeartRateData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA_HEART_RATE));
                 displayBatteryData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA_BATTERY));
+
+            } else if (BluetoothLeService.ACTION_STATE_CLOSED.equals(action)) {
+                updateConnectionState("ACTION_STATE_CLOSED");
             }
         }
     };
@@ -181,8 +185,9 @@ public class DeviceActivity extends AppCompatActivity {
         return intentFilter;
     }
 
-    private void updateConnectionState(final int resourceId) {
+    private void updateConnectionState(String resourceId) {
         Log.d(TAG, "New connection state is: " + resourceId);
+        mConnectionStatus = resourceId;
     }
 
     private void displayHeartRateData(String data) {
