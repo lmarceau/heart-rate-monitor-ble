@@ -89,6 +89,7 @@ public class UITest {
         // Added a sleep statement to match the app's execution delay.
         // The recommended way to handle such scenarios is to use Espresso idling resources:
         // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
+        /* Delay here is due to the 5000 ms allowed for scanning */
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {

@@ -121,7 +121,7 @@ public class DeviceActivity extends AppCompatActivity {
 
     /**
      * Bind to a service to interact with it and perform interprocess communication (IPC)
-      */
+     */
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
@@ -233,7 +233,7 @@ public class DeviceActivity extends AppCompatActivity {
 
     /**
     * Every time a new heart rate value is received, it is added to the real time chart
-    **/
+    */
     private void addHeartRateEntry() {
         LineData data = heartRateChart.getData();
 
